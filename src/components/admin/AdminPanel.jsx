@@ -37,13 +37,11 @@ const AdminPanel = () => {
     { label: "Add Hospital", to: "/admin/add-hospital" },
     { label: "Add Designation", to: "/admin/add-designation" },
     { label: "Add Department", to: "/admin/add-department" },
-    { label: "Add Section Heading", to: "/admin/add-section-heading" },
     { label: "Cities", to: "/admin/cities" },
     { label: "Hospitals", to: "/admin/hospitals" },
     { label: "Designations", to: "/admin/designations" },
     { label: "States", to: "/admin/states" },
     { label: "Departments", to: "/admin/departments" },
-    { label: "Section Headings", to: "/admin/section-headings" },
     { label: "Doctor List", to: "/admin/doctorlist" },
   ];
 
@@ -52,28 +50,29 @@ const AdminPanel = () => {
     item.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login");
+  };
+
   return (
-    <div className="flex h-screen">
-      {/* Check if user is authenticated */}
+    <div className="flex h-screen overflow-hidden">
       {localStorage.getItem("isAuthenticated") !== "true" ? (
-        <LoginComponent /> // Render the new login component if not authenticated
+        <LoginComponent />
       ) : (
         <>
-          {/* Toggle button for mobile screens */}
           <div className="absolute top-4 left-4 md:hidden">
             <Button onClick={() => setSidebarOpen(!sidebarOpen)}>
               {sidebarOpen ? "Close" : "Menu"}
             </Button>
           </div>
 
-          {/* Sidebar */}
           <div
             className={`${
               sidebarOpen ? "block" : "hidden"
             } md:block w-64 bg-blue-600 p-4 transition-transform duration-300 ease-in-out`}
           >
             <h1 className="text-white text-xl font-bold mb-4">Admin Panel</h1>
-            {/* Search Input for navigation items */}
             <div className="mb-4">
               <Input
                 placeholder="Search..."
@@ -93,26 +92,29 @@ const AdminPanel = () => {
                 ))}
               </ul>
             </nav>
+            {/* Dashboard Settings */}
+            <div className="mt-4">
+              <Button onClick={handleLogout} className="w-full bg-red-600">
+                Logout
+              </Button>
+            </div>
           </div>
 
-          {/* Main Content Area */}
           <div className="flex-1 p-6 overflow-auto">
             <Routes>
+              <Route path="/" element={<h2>Welcome to the Admin Panel</h2>} />
               <Route path="add-doctor" element={<AddDoctorForm />} />
               <Route path="add-city" element={<AddCityForm />} />
               <Route path="add-state" element={<AddStateForm />} />
               <Route path="add-hospital" element={<AddHospitalForm />} />
               <Route path="add-designation" element={<AddDesignationForm />} />
               <Route path="add-department" element={<AddDepartmentForm />} />
-
               <Route path="cities" element={<Cities />} />
               <Route path="hospitals" element={<Hospitals />} />
               <Route path="designations" element={<Designations />} />
               <Route path="states" element={<States />} />
               <Route path="departments" element={<Departments />} />
-
               <Route path="doctorlist" element={<DoctorList />} />
-              <Route path="/" element={<h2>Welcome to the Admin Panel</h2>} />
             </Routes>
           </div>
         </>

@@ -1,13 +1,28 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { db } from "@/firebase";
 import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import { toast } from "sonner"; // Import toast for notifications
-import { Button } from "@/components/ui/button"; // Import ShadCN components
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Building2, Trash2 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const Departments = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const departmentsPerPage = 5; // Number of departments per page
 
   const fetchDepartments = async () => {
     try {
@@ -17,9 +32,22 @@ const Departments = () => {
       );
     } catch (err) {
       setError("Failed to load departments");
-      console.error("Error fetching departments: ", err); // Log the error
+      console.error("Error fetching departments: ", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteDepartment = async (id) => {
+    try {
+      await deleteDoc(doc(db, "departments", id));
+      setDepartments((prev) =>
+        prev.filter((department) => department.id !== id)
+      );
+      toast.success("Department deleted successfully");
+    } catch (err) {
+      console.error("Error removing department: ", err);
+      toast.error("Error deleting department");
     }
   };
 
@@ -27,51 +55,122 @@ const Departments = () => {
     fetchDepartments();
   }, []);
 
-  const handleDeleteDepartment = async (id) => {
-    try {
-      await deleteDoc(doc(db, "departments", id));
-      setDepartments(departments.filter((department) => department.id !== id));
-      toast.success("Department deleted successfully");
-    } catch (err) {
-      console.error("Error removing department: ", err); // Log the error
-      toast.error("Error deleting department");
-    }
+  // Pagination Logic
+  const indexOfLastDepartment = currentPage * departmentsPerPage;
+  const indexOfFirstDepartment = indexOfLastDepartment - departmentsPerPage;
+  const currentDepartments = departments.slice(
+    indexOfFirstDepartment,
+    indexOfLastDepartment
+  );
+
+  const totalPages = Math.ceil(departments.length / departmentsPerPage);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="loader">Loading...</div>
-      </div>
-    );
+    return <DepartmentsSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-500">{error}</p>
-      </div>
+      <Card className="max-w-md mx-auto mt-8">
+        <CardContent className="pt-6">
+          <p className="text-red-500 text-center">{error}</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Departments</h2>
-      <ul className="space-y-4">
-        {departments.map((department) => (
-          <li key={department.id} className="flex justify-between items-center">
-            <span className="text-lg">{department.departmentName}</span>
-            <Button
-              onClick={() => handleDeleteDepartment(department.id)}
-              className="bg-red-500 text-white"
+    <Card className="max-w-2xl mx-auto mt-8">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">Departments</CardTitle>
+      </CardHeader>
+      <CardContent className="max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <ul className="space-y-4">
+          {currentDepartments.map((department) => (
+            <li
+              key={department.id}
+              className="flex items-center justify-between p-4 bg-secondary rounded-lg"
             >
-              Delete
-            </Button>
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarFallback>
+                    <Building2 className="w-6 h-6" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{department.departmentName}</h3>
+                </div>
+              </div>
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => handleDeleteDepartment(department.id)}
+                className="hover:bg-destructive/90"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </li>
+          ))}
+        </ul>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="text-sm font-semibold">
+                Page {currentPage} of {totalPages}
+              </span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </CardContent>
+    </Card>
+  );
+};
+
+const DepartmentsSkeleton = () => (
+  <Card className="max-w-2xl mx-auto mt-8">
+    <CardHeader>
+      <Skeleton className="h-8 w-64" />
+    </CardHeader>
+    <CardContent>
+      <ul className="space-y-4">
+        {[...Array(3)].map((_, index) => (
+          <li
+            key={index}
+            className="flex items-center justify-between p-4 bg-secondary rounded-lg"
+          >
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div>
+                <Skeleton className="h-4 w-32 mb-2" />
+              </div>
+            </div>
+            <Skeleton className="h-8 w-8 rounded-md" />
           </li>
         ))}
       </ul>
-    </div>
-  );
-};
+    </CardContent>
+  </Card>
+);
 
 export default Departments;
