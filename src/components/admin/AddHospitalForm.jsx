@@ -1,13 +1,25 @@
+"use client";
+
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner"; // Import toast for notifications
-import { db } from "@/firebase"; // Ensure you import db
+import { db } from "@/firebase";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Loader2, Hospital } from "lucide-react";
 
-// Import Shadcn UI components from your generated files
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 const AddHospitalForm = () => {
   const navigate = useNavigate();
@@ -23,7 +35,7 @@ const AddHospitalForm = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -41,12 +53,12 @@ const AddHospitalForm = () => {
         return;
       }
 
-      // If the hospital does not exist, add it to Firestore
+      // Add hospital to Firestore
       await addDoc(collection(db, "hospitals"), {
         hospitalName: normalizedHospitalName,
       });
-      toast.success("Hospital added successfully");
-      reset(); // Reset the form fields after successful submission
+      toast.success("Hospital added successfully!");
+      reset(); // Reset the form fields
     } catch (e) {
       console.error("Error adding hospital: ", e);
       toast.error("Error adding hospital");
@@ -54,33 +66,61 @@ const AddHospitalForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Add Hospital</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label
-            htmlFor="hospitalName"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Hospital Name
-          </label>
-          <Input
-            id="hospitalName"
-            placeholder="Enter hospital name"
-            {...register("hospitalName", {
-              required: "Hospital name is required",
-            })}
-          />
-          {errors.hospitalName && (
-            <p className="text-sm text-red-600 mt-1">
-              {errors.hospitalName.message}
-            </p>
-          )}
-        </div>
-        <Button type="submit" className="w-full">
-          Submit
-        </Button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold flex items-center">
+              <Hospital className="w-6 h-6 mr-2" />
+              Add New Hospital
+            </CardTitle>
+            <CardDescription>
+              Enter the name of the hospital you want to add to the system
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="hospitalName">Hospital Name</Label>
+                <Input
+                  id="hospitalName"
+                  {...register("hospitalName", {
+                    required: "Hospital name is required",
+                  })}
+                  placeholder="Enter hospital name"
+                  className={errors.hospitalName ? "border-red-500" : ""}
+                />
+                {errors.hospitalName && (
+                  <p className="text-sm text-red-500">
+                    {errors.hospitalName.message}
+                  </p>
+                )}
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button
+              type="submit"
+              className="w-full"
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding Hospital...
+                </>
+              ) : (
+                "Add Hospital"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 };

@@ -1,11 +1,24 @@
+"use client";
+
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner"; // Import toast for notifications
-import { db } from "@/firebase"; // Ensure you import db
+import { toast } from "sonner";
+import { db } from "@/firebase";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 const AddCityForm = () => {
   const navigate = useNavigate();
@@ -21,7 +34,7 @@ const AddCityForm = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -49,19 +62,61 @@ const AddCityForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Add City</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="City Name"
-          {...register("cityName", { required: "City name is required" })}
-          error={!!errors.cityName}
-          helperText={errors.cityName?.message}
-        />
-        <Button type="submit" className="w-full">
-          Submit
-        </Button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold flex items-center">
+              <MapPin className="w-6 h-6 mr-2" />
+              Add New City
+            </CardTitle>
+            <CardDescription>
+              Enter the name of the city you want to add to the system
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cityName">City Name</Label>
+                <Input
+                  id="cityName"
+                  {...register("cityName", {
+                    required: "City name is required",
+                  })}
+                  placeholder="Enter city name"
+                  className={errors.cityName ? "border-red-500" : ""}
+                />
+                {errors.cityName && (
+                  <p className="text-sm text-red-500">
+                    {errors.cityName.message}
+                  </p>
+                )}
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter>
+            <Button
+              type="submit"
+              className="w-full"
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding City...
+                </>
+              ) : (
+                "Add City"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </motion.div>
     </div>
   );
 };
