@@ -56,7 +56,7 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#ededed]">
       {localStorage.getItem("isAuthenticated") !== "true" ? (
         <LoginComponent />
       ) : (
