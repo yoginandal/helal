@@ -4,6 +4,8 @@ import Header from "@/components/header/Header";
 import Footer from "@/components/footer/Footer";
 import AdminPanel from "@/components/admin/AdminPanel";
 import LoginComponent from "@/components/ui/LoginComponent";
+import Doctors from "@/components/website/Doctor";
+import DoctorDetails from "@/components/website/DoctorDetails";
 
 // Layout Wrapper for Conditional Header and Footer
 function Layout({ children }) {
@@ -33,7 +35,10 @@ export default function App() {
         <Routes>
           <Route path="/admin/*" element={<AdminPanel />} />
           <Route path="/login" element={<LoginComponent />} />
+
           {/* Add other routes here */}
+          <Route path="/doctors" element={<Doctors />} />
+          <Route path="/doctors/:id" element={<DoctorDetails />} />
         </Routes>
       </Layout>
     </BrowserRouter>

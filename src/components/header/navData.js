@@ -1,12 +1,8 @@
 export const navlinks = [
   { name: "HOME", path: "/" },
   {
-    name: "PROGRAMS",
-    path: "/programs",
-    dropdown: [
-      { name: "PGDM", path: "/programs/pgdm" },
-      { name: "Executive PGDM", path: "/programs/executive-pgdm" },
-    ],
+    name: "Doctors",
+    path: "/doctors",
   },
   {
     name: "ADMISSIONS",
