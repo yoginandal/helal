@@ -10,8 +10,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Stethoscope, Building2, Search } from "lucide-react";
-import { db } from "../../firebase";
-import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Doctors() {
@@ -30,45 +28,51 @@ export default function Doctors() {
   const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
+    let isMounted = true;
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const querySnapshot = await getDocs(collection(db, "doctors"));
-        const doctorsData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const [doctorsRes, citiesRes, hospitalsRes, departmentsRes] =
+          await Promise.all([
+            fetch(`${import.meta.env.VITE_API_URL}/api/get_doctors.php`),
+            fetch(`${import.meta.env.VITE_API_URL}/api/get_cities.php`),
+            fetch(`${import.meta.env.VITE_API_URL}/api/get_hospitals.php`),
+            fetch(`${import.meta.env.VITE_API_URL}/api/get_departments.php`),
+          ]);
 
-        setDoctors(doctorsData);
-        setCities([
-          ...new Set(
-            doctorsData
-              .map((doctor) => capitalizeWords(doctor.city))
-              .filter(Boolean)
-          ),
-        ]);
-        setHospitals([
-          ...new Set(
-            doctorsData
-              .map((doctor) => capitalizeWords(doctor.hospital))
-              .filter(Boolean)
-          ),
-        ]);
-        setDepartments([
-          ...new Set(
-            doctorsData
-              .map((doctor) => capitalizeWords(doctor.department))
-              .filter(Boolean)
-          ),
-        ]);
-        setLoading(false);
-        setFilteredDoctors(doctorsData);
+        const doctorsData = await doctorsRes.json();
+        const citiesData = await citiesRes.json();
+        const hospitalsData = await hospitalsRes.json();
+        const departmentsData = await departmentsRes.json();
+
+        if (isMounted) {
+          if (Array.isArray(doctorsData)) {
+            setDoctors(doctorsData);
+            setFilteredDoctors(doctorsData);
+          } else {
+            console.error("Fetched doctors data is not an array:", doctorsData);
+            setDoctors([]);
+            setFilteredDoctors([]);
+          }
+
+          setCities(citiesData.map((c) => c.name));
+          setHospitals(hospitalsData.map((h) => h.name));
+          setDepartments(departmentsData.map((d) => d.name));
+        }
       } catch (error) {
-        console.error("Error Fetching Doctors:", error);
-        setLoading(false);
+        console.error("Error Fetching data:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchDoctors();
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -188,14 +192,18 @@ export default function Doctors() {
               <CardContent className="p-0">
                 <div className="relative h-72">
                   <img
-                    src={doctor.image || "/placeholder.svg"}
-                    alt={capitalizeWords(doctor.doctorName)}
+                    src={
+                      doctor.image
+                        ? `/backend${doctor.image}`
+                        : "/placeholder.svg"
+                    }
+                    alt={capitalizeWords(doctor.name)}
                     className="w-full h-full object-contain object-top"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
                   <div className="absolute bottom-4 left-4 right-4">
                     <h2 className="text-xl font-semibold text-white mb-1">
-                      {capitalizeWords(doctor.doctorName)}
+                      {capitalizeWords(doctor.name)}
                     </h2>
                   </div>
                 </div>

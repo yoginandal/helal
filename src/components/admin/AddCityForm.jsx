@@ -1,124 +1,129 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { toast } from "sonner";
-import { db } from "@/firebase";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
-const AddCityForm = () => {
-  const navigate = useNavigate();
+export function AddCityForm({ onCityAdded }) {
+  const [cityName, setCityName] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [states, setStates] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (isAuthenticated !== "true") {
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
-  const onSubmit = async (data) => {
-    const normalizedData = { cityName: data.cityName.toLowerCase() };
-
-    try {
-      // Check if the city already exists
-      const q = query(
-        collection(db, "cities"),
-        where("cityName", "==", normalizedData.cityName)
-      );
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        toast.error("City already exists");
-        return;
+    const fetchStates = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/get_states.php`
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setStates(data);
+        } else {
+          toast.error("Failed to fetch states.");
+        }
+      } catch (error) {
+        toast.error("An error occurred while fetching states.");
+        console.error(error);
       }
+    };
+    fetchStates();
+  }, []);
 
-      await addDoc(collection(db, "cities"), normalizedData);
-      toast.success("City added successfully");
-      reset(); // Reset the form fields after successful submission
-    } catch (e) {
-      console.error("Error adding city: ", e);
-      toast.error("Error adding city");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedState) {
+      toast.error("Please select a state.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", cityName);
+      formData.append("state_id", selectedState);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/add_city.php`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("City added successfully!");
+        setCityName("");
+        setSelectedState("");
+        onCityAdded();
+      } else {
+        toast.error(result.message || "Failed to add city.");
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+      console.error(error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold flex items-center">
-              <MapPin className="w-6 h-6 mr-2" />
-              Add New City
-            </CardTitle>
-            <CardDescription>
-              Enter the name of the city you want to add to the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="cityName">City Name</Label>
-                <Input
-                  id="cityName"
-                  {...register("cityName", {
-                    required: "City name is required",
-                  })}
-                  placeholder="Enter city name"
-                  className={errors.cityName ? "border-red-500" : ""}
-                />
-                {errors.cityName && (
-                  <p className="text-sm text-red-500">
-                    {errors.cityName.message}
-                  </p>
-                )}
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter>
-            <Button
-              type="submit"
-              className="w-full"
-              onClick={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding City...
-                </>
-              ) : (
-                "Add City"
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </div>
+    <Card className="max-w-md mx-auto mt-8">
+      <CardHeader>
+        <CardTitle>Add New City</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="city-name">City Name</Label>
+            <Input
+              id="city-name"
+              value={cityName}
+              onChange={(e) => setCityName(e.target.value)}
+              placeholder="Enter city name"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="state">State</Label>
+            <Select onValueChange={setSelectedState} value={selectedState}>
+              <SelectTrigger id="state">
+                <SelectValue placeholder="Select a state" />
+              </SelectTrigger>
+              <SelectContent>
+                {states.map((state) => (
+                  <SelectItem key={state.id} value={state.id.toString()}>
+                    {state.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" disabled={submitting} className="w-full">
+            {submitting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Add City
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
-};
+}
 
-export default AddCityForm;
+AddCityForm.propTypes = {
+  onCityAdded: PropTypes.func.isRequired,
+};

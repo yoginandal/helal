@@ -1,177 +1,96 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { db } from "@/firebase";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import AddDesignationForm from "./AddDesignationForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BadgeCheck, Trash2 } from "lucide-react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Trash2 } from "lucide-react";
 
 const Designations = () => {
   const [designations, setDesignations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const designationsPerPage = 5; // Number of designations per page
 
-  const fetchDesignations = async () => {
+  const fetchDesignations = useCallback(async () => {
+    setLoading(true);
     try {
-      const designationsSnapshot = await getDocs(
-        collection(db, "designations")
-      );
-      setDesignations(
-        designationsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      );
+      const response = await fetch("/backend/api/get_designations.php");
+      if (!response.ok) throw new Error("Failed to fetch designations.");
+      setDesignations(await response.json());
     } catch (err) {
-      setError("Failed to load designations");
-      console.error("Error fetching designations: ", err);
+      setError("Failed to load designations.");
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleDeleteDesignation = async (id) => {
+  const deleteDesignation = async (id) => {
+    const originalDesignations = [...designations];
+    setDesignations((prev) => prev.filter((d) => d.id !== id));
+
     try {
-      await deleteDoc(doc(db, "designations", id));
-      setDesignations((prev) =>
-        prev.filter((designation) => designation.id !== id)
-      );
-      toast.success("Designation deleted successfully");
+      const response = await fetch("/backend/api/delete_designation.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      toast.success("Designation deleted successfully.");
     } catch (err) {
-      console.error("Error removing designation: ", err);
-      toast.error("Error deleting designation");
+      setDesignations(originalDesignations);
+      toast.error(err.message || "Failed to delete designation.");
     }
   };
 
   useEffect(() => {
     fetchDesignations();
-  }, []);
-
-  // Pagination Logic
-  const indexOfLastDesignation = currentPage * designationsPerPage;
-  const indexOfFirstDesignation = indexOfLastDesignation - designationsPerPage;
-  const currentDesignations = designations.slice(
-    indexOfFirstDesignation,
-    indexOfLastDesignation
-  );
-
-  const totalPages = Math.ceil(designations.length / designationsPerPage);
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
-  if (loading) {
-    return <DesignationsSkeleton />;
-  }
+  }, [fetchDesignations]);
 
   if (error) {
-    return (
-      <Card className="max-w-md mx-auto mt-8">
-        <CardContent className="pt-6">
-          <p className="text-red-500 text-center">{error}</p>
-        </CardContent>
-      </Card>
-    );
+    return <p className="text-red-500">{error}</p>;
   }
 
   return (
-    <Card className="max-w-2xl mx-auto mt-8">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">Designations</CardTitle>
-      </CardHeader>
-      <CardContent className="max-h-[calc(100vh-4rem)] overflow-y-auto">
-        <ul className="space-y-4">
-          {currentDesignations.map((designation) => (
-            <li
-              key={designation.id}
-              className="flex items-center justify-between p-4 bg-secondary rounded-lg"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="bg-primary text-white rounded-full p-2">
-                  <BadgeCheck className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">
-                    {designation.designationName}
-                  </h3>
-                </div>
-              </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => handleDeleteDesignation(designation.id)}
-                className="hover:bg-destructive/90"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span className="sr-only">Delete</span>
-              </Button>
-            </li>
-          ))}
-        </ul>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <span className="text-sm font-semibold">
-                Page {currentPage} of {totalPages}
-              </span>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </CardContent>
-    </Card>
+    <div className="space-y-8">
+      <AddDesignationForm onDesignationAdded={fetchDesignations} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Designations List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {designations.map((desig) => (
+                <li
+                  key={desig.id}
+                  className="flex items-center justify-between p-2 bg-secondary rounded-md"
+                >
+                  <span>{desig.designationName}</span>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => deleteDesignation(desig.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
-
-const DesignationsSkeleton = () => (
-  <Card className="max-w-2xl mx-auto mt-8">
-    <CardHeader>
-      <Skeleton className="h-8 w-64" />
-    </CardHeader>
-    <CardContent>
-      <ul className="space-y-4">
-        {[...Array(3)].map((_, index) => (
-          <li
-            key={index}
-            className="flex items-center justify-between p-4 bg-secondary rounded-lg"
-          >
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div>
-                <Skeleton className="h-4 w-32 mb-2" />
-              </div>
-            </div>
-            <Skeleton className="h-8 w-8 rounded-md" />
-          </li>
-        ))}
-      </ul>
-    </CardContent>
-  </Card>
-);
 
 export default Designations;

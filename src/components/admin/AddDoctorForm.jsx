@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db, storage } from "@/firebase"; // Added storage import
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Keep this import for storage functions
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
@@ -41,6 +38,7 @@ const AddDoctorForm = () => {
   const defaultValues = {
     doctorName: "",
     department: "",
+    specialty: "",
     degree: "",
     experience: "",
     image: null,
@@ -48,7 +46,6 @@ const AddDoctorForm = () => {
     currentPosition: "",
     city: "",
     state: "",
-    about: "",
     expertise: "",
     sections: [],
   };
@@ -70,37 +67,41 @@ const AddDoctorForm = () => {
     const loadData = async () => {
       try {
         const [
-          citiesSnapshot,
-          statesSnapshot,
-          hospitalsSnapshot,
-          departmentsSnapshot,
-          designationsSnapshot,
-          sectionHeadingsSnapshot,
+          citiesRes,
+          statesRes,
+          hospitalsRes,
+          departmentsRes,
+          designationsRes,
         ] = await Promise.all([
-          getDocs(collection(db, "cities")),
-          getDocs(collection(db, "states")),
-          getDocs(collection(db, "hospitals")),
-          getDocs(collection(db, "departments")),
-          getDocs(collection(db, "designations")),
-          getDocs(collection(db, "sectionHeadings")),
+          fetch("/backend/api/get_cities.php"),
+          fetch("/backend/api/get_states.php"),
+          fetch("/backend/api/get_hospitals.php"),
+          fetch("/backend/api/get_departments.php"),
+          fetch("/backend/api/get_designations.php"),
         ]);
 
-        setCities(citiesSnapshot.docs.map((doc) => doc.data().cityName));
-        setStates(statesSnapshot.docs.map((doc) => doc.data().stateName));
-        setHospitals(
-          hospitalsSnapshot.docs.map((doc) => doc.data().hospitalName)
+        setCities(await citiesRes.json());
+        setStates(await statesRes.json());
+        setHospitals(await hospitalsRes.json());
+        setDepartments(await departmentsRes.json());
+        setDesignations(await designationsRes.json());
+
+        // Static for now, can be moved to DB later if needed
+        setSectionHeadings([
+          "about doctor",
+          "experience",
+          "education",
+          "membership",
+          "awards",
+          "specialization and expertise",
+          "research and publication",
+        ]);
+      } catch (err) {
+        setError(
+          "Failed to load form data. Please check the backend connection."
         );
-        setDepartments(
-          departmentsSnapshot.docs.map((doc) => doc.data().departmentName)
-        );
-        setDesignations(
-          designationsSnapshot.docs.map((doc) => doc.data().designationName)
-        );
-        setSectionHeadings(
-          sectionHeadingsSnapshot.docs.map((doc) => doc.data().sectionHeading)
-        );
-      } catch {
-        setError("Failed to load data");
+        toast.error("Failed to load form data.");
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -109,70 +110,38 @@ const AddDoctorForm = () => {
     loadData();
   }, []);
 
-  const checkIfImageExists = async (imageURL) => {
-    const q = query(collection(db, "doctors"), where("image", "==", imageURL));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
-  };
-
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
+    const data = new FormData();
+    Object.keys(formData).forEach((key) => {
+      if (key === "sections") {
+        data.append(key, JSON.stringify(formData[key]));
+      } else if (formData[key]) {
+        data.append(key, formData[key]);
+      }
+    });
+
     try {
-      let imageURL = "";
-      if (formData.image) {
-        const storageRef = ref(storage, `images/${formData.image.name}`);
-        await uploadBytes(storageRef, formData.image);
-        imageURL = await getDownloadURL(storageRef);
+      const response = await fetch("/backend/api/add_doctor.php", {
+        method: "POST",
+        body: data,
+      });
 
-        const imageExists = await checkIfImageExists(imageURL);
-        if (imageExists) {
-          toast.error("An image with the same URL already exists.");
-          setSubmitting(false);
-          return;
-        }
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "An unknown error occurred.");
       }
 
-      const q = query(
-        collection(db, "doctors"),
-        where("doctorName", "==", formData.doctorName),
-        where("department", "==", formData.department)
-      );
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        toast.error(
-          "A doctor with the same name and department already exists."
-        );
-        setSubmitting(false);
-        return;
-      }
-
-      const data = {
-        ...formData,
-        image: imageURL,
-        expertise: formData.expertise
-          .split("\n")
-          .map((item) => `• ${item}`)
-          .join("\n"),
-        sections: formData.sections.map((section) => ({
-          ...section,
-          sectionContent: section.sectionContent
-            .split("\n")
-            .map((item) => `• ${item}`)
-            .join("\n"),
-        })),
-      };
-
-      await addDoc(collection(db, "doctors"), data);
-      toast.success("Doctor profile created successfully!");
+      toast.success(result.message || "Doctor profile created successfully!");
       setFormData(defaultValues);
       setCurrentStep(1);
       setImagePreview(null);
-    } catch (e) {
-      toast.error("Error creating doctor profile");
-      console.error(e);
+    } catch (err) {
+      toast.error(err.message || "Error creating doctor profile");
+      console.error(err);
     } finally {
       setSubmitting(false);
     }

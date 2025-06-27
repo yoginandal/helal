@@ -1,128 +1,75 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner"; // Import toast for notifications
-import { db } from "@/firebase";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Loader2, Hospital } from "lucide-react";
-
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
-const AddHospitalForm = () => {
-  const navigate = useNavigate();
+const AddHospitalForm = ({ onHospitalAdded }) => {
+  const [hospitalName, setHospitalName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    if (isAuthenticated !== "true") {
-      navigate("/login");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!hospitalName.trim()) {
+      toast.error("Hospital name cannot be empty.");
+      return;
     }
-  }, [navigate]);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm();
-
-  const onSubmit = async (data) => {
-    const normalizedHospitalName = data.hospitalName.trim().toLowerCase();
+    setSubmitting(true);
 
     try {
-      // Check if the hospital already exists
-      const q = query(
-        collection(db, "hospitals"),
-        where("hospitalName", "==", normalizedHospitalName)
-      );
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        toast.error("Hospital already exists. Please enter a different name.");
-        return;
-      }
-
-      // Add hospital to Firestore
-      await addDoc(collection(db, "hospitals"), {
-        hospitalName: normalizedHospitalName,
+      const response = await fetch("/backend/api/add_hospital.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hospitalName }),
       });
-      toast.success("Hospital added successfully!");
-      reset(); // Reset the form fields
-    } catch (e) {
-      console.error("Error adding hospital: ", e);
-      toast.error("Error adding hospital");
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+
+      toast.success(result.message);
+      setHospitalName("");
+      if (onHospitalAdded) onHospitalAdded();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold flex items-center">
-              <Hospital className="w-6 h-6 mr-2" />
-              Add New Hospital
-            </CardTitle>
-            <CardDescription>
-              Enter the name of the hospital you want to add to the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="hospitalName">Hospital Name</Label>
-                <Input
-                  id="hospitalName"
-                  {...register("hospitalName", {
-                    required: "Hospital name is required",
-                  })}
-                  placeholder="Enter hospital name"
-                  className={errors.hospitalName ? "border-red-500" : ""}
-                />
-                {errors.hospitalName && (
-                  <p className="text-sm text-red-500">
-                    {errors.hospitalName.message}
-                  </p>
-                )}
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter>
-            <Button
-              type="submit"
-              className="w-full"
-              onClick={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding Hospital...
-                </>
-              ) : (
-                "Add Hospital"
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </div>
+    <Card className="max-w-md mx-auto mt-8">
+      <CardHeader>
+        <CardTitle>Add New Hospital</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="hospitalName">Hospital Name</Label>
+            <Input
+              id="hospitalName"
+              value={hospitalName}
+              onChange={(e) => setHospitalName(e.target.value)}
+              placeholder="e.g., Fortis Escorts"
+              required
+            />
+          </div>
+          <Button type="submit" disabled={submitting} className="w-full">
+            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Add Hospital
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
+};
+
+AddHospitalForm.propTypes = {
+  onHospitalAdded: PropTypes.func,
 };
 
 export default AddHospitalForm;

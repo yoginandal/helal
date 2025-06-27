@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db } from "@/firebase";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+// import { db } from "@/firebase";
+// import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Trash2 } from "lucide-react";
 import {
@@ -22,15 +22,15 @@ const DoctorList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const doctorsPerPage = 5; // Number of doctors per page
+  const doctorsPerPage = 5;
 
   const fetchDoctors = async () => {
     try {
-      const doctorsSnapshot = await getDocs(collection(db, "doctors"));
-      const fetchedDoctors = doctorsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const response = await fetch("/backend/api/get_doctors.php");
+      if (!response.ok) {
+        throw new Error("Failed to fetch doctors from the server.");
+      }
+      const fetchedDoctors = await response.json();
       setDoctors(fetchedDoctors);
     } catch (err) {
       setError("Failed to load doctors");
@@ -41,14 +41,31 @@ const DoctorList = () => {
   };
 
   const deleteDoctor = async (id) => {
+    // Optimistic UI update
+    const originalDoctors = [...doctors];
+    setDoctors((prevDoctors) =>
+      prevDoctors.filter((doctor) => doctor.id !== id)
+    );
+
     try {
-      await deleteDoc(doc(db, "doctors", id));
-      setDoctors((prevDoctors) =>
-        prevDoctors.filter((doctor) => doctor.id !== id)
-      );
-      toast.success("Doctor deleted successfully");
+      const response = await fetch("/backend/api/delete_doctor.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to delete doctor");
+      }
+
+      toast.success(result.message || "Doctor deleted successfully");
+      // No need to call fetchDoctors() again, UI is already updated
     } catch (err) {
-      toast.error("Failed to delete doctor");
+      // Revert UI if the delete fails
+      setDoctors(originalDoctors);
+      toast.error(err.message || "Failed to delete doctor");
       console.error("Error removing doctor: ", err);
     }
   };
@@ -100,6 +117,7 @@ const DoctorList = () => {
             >
               <div className="flex items-center space-x-4">
                 <Avatar>
+                  <AvatarImage src={doctor.image} alt={doctor.doctorName} />
                   <AvatarFallback>
                     <User className="w-6 h-6" />
                   </AvatarFallback>
@@ -123,27 +141,29 @@ const DoctorList = () => {
             </li>
           ))}
         </ul>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-              />
-            </PaginationItem>
-            <PaginationItem>
-              <span className="text-sm font-semibold">
-                Page {currentPage} of {totalPages}
-              </span>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <span className="text-sm font-semibold">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </CardContent>
     </Card>
   );

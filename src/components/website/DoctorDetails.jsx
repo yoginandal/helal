@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { db } from "../../firebase";
-import { doc, getDoc } from "firebase/firestore";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -24,19 +22,23 @@ export function DoctorDetails() {
 
   useEffect(() => {
     const fetchDoctor = async () => {
-      const docRef = doc(db, "doctors", id);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setDoctor(docSnap.data());
-        setLoading(false);
-      } else {
-        console.log("No such document!");
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/get_doctor_details.php?id=${id}`
+        );
+        const data = await response.json();
+        setDoctor(data);
+      } catch (error) {
+        console.error("Error fetching doctor details:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchDoctor();
+    if (id) {
+      fetchDoctor();
+    }
   }, [id]);
 
   const capitalizeWords = (str) => {
@@ -70,14 +72,18 @@ export function DoctorDetails() {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <Avatar className="w-48 h-48 border-4 border-white shadow-lg">
                 <img
-                  src={doctor.image}
-                  alt={doctor.doctorName}
+                  src={
+                    doctor.image
+                      ? `/backend${doctor.image}`
+                      : "/placeholder.svg"
+                  }
+                  alt={doctor.name}
                   className="object-cover"
                 />
               </Avatar>
               <div className="text-center md:text-left">
                 <h1 className="text-3xl font-bold mb-2">
-                  Dr. {capitalizeWords(doctor.doctorName)}
+                  Dr. {capitalizeWords(doctor.name)}
                 </h1>
                 <p className="text-xl text-muted-foreground mb-4">
                   {doctor.department}
@@ -103,7 +109,7 @@ export function DoctorDetails() {
             <Card>
               <CardHeader>
                 <h2 className="text-2xl font-semibold">
-                  About Dr. {capitalizeWords(doctor.doctorName)}
+                  About Dr. {capitalizeWords(doctor.name)}
                 </h2>
               </CardHeader>
               <CardContent>
