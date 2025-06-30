@@ -2,60 +2,68 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import AddDesignationForm from "./AddDesignationForm";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AddDesignationForm } from "./AddDesignationForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 
 const Designations = () => {
   const [designations, setDesignations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchDesignations = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/backend/api/get_designations.php");
-      if (!response.ok) throw new Error("Failed to fetch designations.");
-      setDesignations(await response.json());
-    } catch (err) {
-      setError("Failed to load designations.");
-      toast.error(err.message);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/get_designations.php`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setDesignations(data);
+      } else {
+        toast.error("Failed to fetch designations.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while fetching designations.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const deleteDesignation = async (id) => {
-    const originalDesignations = [...designations];
-    setDesignations((prev) => prev.filter((d) => d.id !== id));
-
-    try {
-      const response = await fetch("/backend/api/delete_designation.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-      toast.success("Designation deleted successfully.");
-    } catch (err) {
-      setDesignations(originalDesignations);
-      toast.error(err.message || "Failed to delete designation.");
-    }
-  };
-
   useEffect(() => {
     fetchDesignations();
   }, [fetchDesignations]);
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
-  }
+  const handleDelete = async (id) => {
+    const originalDesignations = [...designations];
+    setDesignations(
+      designations.filter((designation) => designation.id !== id)
+    );
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/delete_designation.php?id=${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        toast.success("Designation deleted successfully!");
+      } else {
+        toast.error(result.message || "Failed to delete designation.");
+        setDesignations(originalDesignations);
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+      setDesignations(originalDesignations);
+      console.error(error);
+    }
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <AddDesignationForm onDesignationAdded={fetchDesignations} />
       <Card>
         <CardHeader>
@@ -64,24 +72,24 @@ const Designations = () => {
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
             </div>
           ) : (
             <ul className="space-y-2">
-              {designations.map((desig) => (
+              {designations.map((designation) => (
                 <li
-                  key={desig.id}
-                  className="flex items-center justify-between p-2 bg-secondary rounded-md"
+                  key={designation.id}
+                  className="flex items-center justify-between p-2 bg-slate-50 rounded-md"
                 >
-                  <span>{desig.designationName}</span>
+                  <span>{designation.name}</span>
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="icon"
-                    onClick={() => deleteDesignation(desig.id)}
+                    onClick={() => handleDelete(designation.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </li>
               ))}

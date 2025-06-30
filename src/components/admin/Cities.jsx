@@ -2,60 +2,66 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import AddCityForm from "./AddCityForm";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AddCityForm } from "./AddCityForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 
 const Cities = () => {
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchCities = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/backend/api/get_cities.php");
-      if (!response.ok) throw new Error("Failed to fetch cities.");
-      setCities(await response.json());
-    } catch (err) {
-      setError("Failed to load cities.");
-      toast.error(err.message);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/get_cities.php`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setCities(data);
+      } else {
+        toast.error("Failed to fetch cities.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while fetching cities.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const deleteCity = async (id) => {
-    const originalCities = [...cities];
-    setCities((prev) => prev.filter((c) => c.id !== id));
-
-    try {
-      const response = await fetch("/backend/api/delete_city.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-      toast.success("City deleted successfully.");
-    } catch (err) {
-      setCities(originalCities);
-      toast.error(err.message || "Failed to delete city.");
-    }
-  };
-
   useEffect(() => {
     fetchCities();
   }, [fetchCities]);
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
-  }
+  const handleDelete = async (id) => {
+    const originalCities = [...cities];
+    setCities(cities.filter((city) => city.id !== id));
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/delete_city.php?id=${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        toast.success("City deleted successfully!");
+      } else {
+        toast.error(result.message || "Failed to delete city.");
+        setCities(originalCities);
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+      setCities(originalCities);
+      console.error(error);
+    }
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <AddCityForm onCityAdded={fetchCities} />
       <Card>
         <CardHeader>
@@ -64,24 +70,24 @@ const Cities = () => {
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
             </div>
           ) : (
             <ul className="space-y-2">
               {cities.map((city) => (
                 <li
                   key={city.id}
-                  className="flex items-center justify-between p-2 bg-secondary rounded-md"
+                  className="flex items-center justify-between p-2 bg-slate-50 rounded-md"
                 >
-                  <span>{city.cityName}</span>
+                  <span>{city.name}</span>
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="icon"
-                    onClick={() => deleteCity(city.id)}
+                    onClick={() => handleDelete(city.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </li>
               ))}

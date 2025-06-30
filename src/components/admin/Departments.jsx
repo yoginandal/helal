@@ -2,60 +2,66 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import AddDepartmentForm from "./AddDepartmentForm";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import AddDepartmentForm from "./AddDepartmentForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 
 const Departments = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/backend/api/get_departments.php");
-      if (!response.ok) throw new Error("Failed to fetch departments.");
-      setDepartments(await response.json());
-    } catch (err) {
-      setError("Failed to load departments.");
-      toast.error(err.message);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/get_departments.php`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setDepartments(data);
+      } else {
+        toast.error("Failed to fetch departments.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while fetching departments.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const deleteDepartment = async (id) => {
-    const originalDepartments = [...departments];
-    setDepartments((prev) => prev.filter((d) => d.id !== id));
-
-    try {
-      const response = await fetch("/backend/api/delete_department.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-      toast.success("Department deleted successfully.");
-    } catch (err) {
-      setDepartments(originalDepartments);
-      toast.error(err.message || "Failed to delete department.");
-    }
-  };
-
   useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
-  }
+  const handleDelete = async (id) => {
+    const originalDepartments = [...departments];
+    setDepartments(departments.filter((department) => department.id !== id));
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/delete_department.php?id=${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        toast.success("Department deleted successfully!");
+      } else {
+        toast.error(result.message || "Failed to delete department.");
+        setDepartments(originalDepartments);
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+      setDepartments(originalDepartments);
+      console.error(error);
+    }
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <AddDepartmentForm onDepartmentAdded={fetchDepartments} />
       <Card>
         <CardHeader>
@@ -64,24 +70,24 @@ const Departments = () => {
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
             </div>
           ) : (
             <ul className="space-y-2">
-              {departments.map((dept) => (
+              {departments.map((department) => (
                 <li
-                  key={dept.id}
-                  className="flex items-center justify-between p-2 bg-secondary rounded-md"
+                  key={department.id}
+                  className="flex items-center justify-between p-2 bg-slate-50 rounded-md"
                 >
-                  <span>{dept.departmentName}</span>
+                  <span>{department.name}</span>
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="icon"
-                    onClick={() => deleteDepartment(dept.id)}
+                    onClick={() => handleDelete(department.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </li>
               ))}

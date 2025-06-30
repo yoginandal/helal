@@ -10,8 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { auth } from "@/firebase"; // Firebase setup
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -33,22 +31,12 @@ export default function LoginComponent() {
       return;
     }
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem("isAuthenticated", "true"); // Set authentication status
-      navigate("/admin"); // Redirect to admin panel
-    } catch (err) {
-      console.error("Authentication error:", err);
-      if (err.code === "auth/user-not-found") {
-        setError("No user found with this email.");
-      } else if (err.code === "auth/wrong-password") {
-        setError("Incorrect password. Please try again.");
-      } else {
-        setError("An error occurred. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+    // NOTE: Bypassing authentication for now.
+    // TODO: Implement PHP/SQL authentication
+    localStorage.setItem("isAuthenticated", "true");
+    navigate("/admin");
+
+    setLoading(false);
   };
 
   return (

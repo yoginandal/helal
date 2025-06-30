@@ -15,27 +15,31 @@ const AddStateForm = ({ onStateAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!stateName.trim()) {
-      toast.error("State name cannot be empty.");
-      return;
-    }
     setSubmitting(true);
-
     try {
-      const response = await fetch("/backend/api/add_state.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stateName }),
-      });
+      const formData = new FormData();
+      formData.append("name", stateName);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/add_state.php`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
 
-      toast.success(result.message);
-      setStateName("");
-      if (onStateAdded) onStateAdded();
+      if (response.ok) {
+        toast.success("State added successfully!");
+        setStateName("");
+        onStateAdded();
+      } else {
+        toast.error(result.message || "Failed to add state.");
+      }
     } catch (error) {
-      toast.error(error.message);
+      toast.error("An error occurred.");
+      console.error(error);
     } finally {
       setSubmitting(false);
     }

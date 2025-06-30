@@ -3,18 +3,17 @@ import { Routes, Route, Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button"; // Import ShadCN components
 import { Input } from "@/components/ui/input"; // Import ShadCN components
-import AddDoctorForm from "@/components/admin/AddDoctorForm";
-import AddCityForm from "@/components/admin/AddCityForm";
-import AddStateForm from "@/components/admin/AddStateForm";
-import AddHospitalForm from "@/components/admin/AddHospitalForm";
-import AddDesignationForm from "@/components/admin/AddDesignationForm";
-import AddDepartmentForm from "@/components/admin/AddDepartmentForm";
-import Cities from "@/components/admin/Cities";
-import Hospitals from "@/components/admin/Hospitals";
-import Designations from "@/components/admin/Designations";
-import States from "@/components/admin/States";
-import Departments from "@/components/admin/Departments";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DoctorList from "@/components/admin/DoctorList";
+import AddDoctorForm from "@/components/admin/AddDoctorForm";
+import AddStateForm from "@/components/admin/AddStateForm";
+import { AddCityForm } from "@/components/admin/AddCityForm";
+import AddDepartmentForm from "@/components/admin/AddDepartmentForm";
+import { AddHospitalForm } from "@/components/admin/AddHospitalForm";
+import { AddDesignationForm } from "@/components/admin/AddDesignationForm";
+import Cities from "@/components/admin/Cities";
+import Departments from "@/components/admin/Departments";
+import Designations from "@/components/admin/Designations";
 import LoginComponent from "@/components/ui/LoginComponent"; // Import the new login component
 
 const AdminPanel = () => {

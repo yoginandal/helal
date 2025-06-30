@@ -1,7 +1,7 @@
 <?php
 // backend/config/database.php
 
-$servername = "162.215.240.128";
+$servername = "localhost";
 $username = "helalhealthcare";
 $password = "Digital@2025";
 $dbname = "helaldoy_helalhealthcare";

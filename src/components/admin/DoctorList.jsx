@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-// import { db } from "@/firebase";
-// import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,55 +22,53 @@ const DoctorList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const doctorsPerPage = 5;
 
-  const fetchDoctors = async () => {
+  const fetchDoctors = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch("/backend/api/get_doctors.php");
-      if (!response.ok) {
-        throw new Error("Failed to fetch doctors from the server.");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/get_doctors.php`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setDoctors(data);
+      } else {
+        toast.error("Failed to fetch doctors.");
       }
-      const fetchedDoctors = await response.json();
-      setDoctors(fetchedDoctors);
-    } catch (err) {
-      setError("Failed to load doctors");
-      console.error("Error fetching doctors: ", err);
+    } catch (error) {
+      toast.error("An error occurred while fetching doctors.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const deleteDoctor = async (id) => {
-    // Optimistic UI update
-    const originalDoctors = [...doctors];
-    setDoctors((prevDoctors) =>
-      prevDoctors.filter((doctor) => doctor.id !== id)
-    );
-
-    try {
-      const response = await fetch("/backend/api/delete_doctor.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to delete doctor");
-      }
-
-      toast.success(result.message || "Doctor deleted successfully");
-      // No need to call fetchDoctors() again, UI is already updated
-    } catch (err) {
-      // Revert UI if the delete fails
-      setDoctors(originalDoctors);
-      toast.error(err.message || "Failed to delete doctor");
-      console.error("Error removing doctor: ", err);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDoctors();
-  }, []);
+  }, [fetchDoctors]);
+
+  const handleDelete = async (id) => {
+    const originalDoctors = [...doctors];
+    setDoctors(doctors.filter((doctor) => doctor.id !== id));
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/delete_doctor.php?id=${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        toast.success("Doctor deleted successfully!");
+      } else {
+        toast.error(result.message || "Failed to delete doctor.");
+        setDoctors(originalDoctors);
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+      setDoctors(originalDoctors);
+      console.error(error);
+    }
+  };
 
   // Pagination Logic
   const indexOfLastDoctor = currentPage * doctorsPerPage;
@@ -132,7 +128,7 @@ const DoctorList = () => {
               <Button
                 variant="destructive"
                 size="icon"
-                onClick={() => deleteDoctor(doctor.id)}
+                onClick={() => handleDelete(doctor.id)}
                 className="hover:bg-destructive/90"
               >
                 <Trash2 className="w-4 h-4" />

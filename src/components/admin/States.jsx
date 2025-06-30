@@ -2,60 +2,66 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import AddStateForm from "./AddStateForm";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import AddStateForm from "./AddStateForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 
 const States = () => {
   const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchStates = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/backend/api/get_states.php");
-      if (!response.ok) throw new Error("Failed to fetch states.");
-      setStates(await response.json());
-    } catch (err) {
-      setError("Failed to load states.");
-      toast.error(err.message);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/get_states.php`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setStates(data);
+      } else {
+        toast.error("Failed to fetch states.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while fetching states.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const deleteState = async (id) => {
-    const originalStates = [...states];
-    setStates((prev) => prev.filter((s) => s.id !== id));
-
-    try {
-      const response = await fetch("/backend/api/delete_state.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
-      toast.success("State deleted successfully.");
-    } catch (err) {
-      setStates(originalStates);
-      toast.error(err.message || "Failed to delete state.");
-    }
-  };
-
   useEffect(() => {
     fetchStates();
   }, [fetchStates]);
 
-  if (error) {
-    return <p className="text-red-500">{error}</p>;
-  }
+  const handleDelete = async (id) => {
+    const originalStates = [...states];
+    setStates(states.filter((state) => state.id !== id));
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/delete_state.php?id=${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        toast.success("State deleted successfully!");
+      } else {
+        toast.error(result.message || "Failed to delete state.");
+        setStates(originalStates);
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+      setStates(originalStates);
+      console.error(error);
+    }
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <AddStateForm onStateAdded={fetchStates} />
       <Card>
         <CardHeader>
@@ -64,24 +70,24 @@ const States = () => {
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
             </div>
           ) : (
             <ul className="space-y-2">
               {states.map((state) => (
                 <li
                   key={state.id}
-                  className="flex items-center justify-between p-2 bg-secondary rounded-md"
+                  className="flex items-center justify-between p-2 bg-slate-50 rounded-md"
                 >
-                  <span>{state.stateName}</span>
+                  <span>{state.name}</span>
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="icon"
-                    onClick={() => deleteState(state.id)}
+                    onClick={() => handleDelete(state.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </li>
               ))}
