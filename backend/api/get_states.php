@@ -6,7 +6,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';
 
-$query = "SELECT id, stateName FROM states ORDER BY stateName ASC";
+$query = "SELECT id, stateName as name FROM states ORDER BY stateName ASC";
 $result = $conn->query($query);
 
 $states = [];

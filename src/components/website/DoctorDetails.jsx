@@ -74,7 +74,7 @@ export function DoctorDetails() {
                 <img
                   src={
                     doctor.image
-                      ? `/backend${doctor.image}`
+                      ? `${import.meta.env.VITE_API_URL}${doctor.image}`
                       : "/placeholder.svg"
                   }
                   alt={doctor.name}

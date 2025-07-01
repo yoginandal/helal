@@ -55,9 +55,9 @@ export default function Doctors() {
             setFilteredDoctors([]);
           }
 
-          setCities(citiesData.map((c) => c.name));
-          setHospitals(hospitalsData.map((h) => h.name));
-          setDepartments(departmentsData.map((d) => d.name));
+          setCities(citiesData);
+          setHospitals(hospitalsData);
+          setDepartments(departmentsData);
         }
       } catch (error) {
         console.error("Error Fetching data:", error);
@@ -173,8 +173,8 @@ export default function Doctors() {
                     All {filter.placeholder.split(" ")[2]}s
                   </SelectItem>
                   {filter.items.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
+                    <SelectItem key={item.id} value={item.name}>
+                      {item.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -194,7 +194,7 @@ export default function Doctors() {
                   <img
                     src={
                       doctor.image
-                        ? `/backend${doctor.image}`
+                        ? `${import.meta.env.VITE_API_URL}${doctor.image}`
                         : "/placeholder.svg"
                     }
                     alt={capitalizeWords(doctor.name)}

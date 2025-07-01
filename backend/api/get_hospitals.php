@@ -6,7 +6,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../config/database.php';
 
-$query = "SELECT id, hospitalName FROM hospitals ORDER BY hospitalName ASC";
+$query = "SELECT id, hospitalName as name FROM hospitals ORDER BY hospitalName ASC";
 $result = $conn->query($query);
 
 $hospitals = [];

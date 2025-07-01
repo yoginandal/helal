@@ -113,13 +113,13 @@ const DoctorList = () => {
             >
               <div className="flex items-center space-x-4">
                 <Avatar>
-                  <AvatarImage src={doctor.image} alt={doctor.doctorName} />
+                  <AvatarImage src={doctor.image} alt={doctor.name} />
                   <AvatarFallback>
                     <User className="w-6 h-6" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">{doctor.doctorName}</h3>
+                  <h3 className="font-semibold">{doctor.name}</h3>
                   <p className="text-sm text-muted-foreground">
                     {doctor.specialty || "Specialty not specified"}
                   </p>
