@@ -13,7 +13,7 @@ if ($conn->connect_error) {
 }
 
 // Fetch doctor details
-$stmt = $conn->prepare("SELECT id, doctorName as name, specialty, city, currentPosition, degree, state, hospital, experience, department, expertise, image, phone, email, website FROM doctors WHERE id = ?");
+$stmt = $conn->prepare("SELECT id, doctorName as name, specialty, city, currentPosition, degree, state, hospital, experience, department, expertise, image FROM doctors WHERE id = ?");
 $stmt->bind_param("s", $id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -23,7 +23,7 @@ $stmt->close();
 if ($doctor) {
     // Fetch doctor sections
     $stmt_sections = $conn->prepare("SELECT sectionHeading, sectionContent FROM doctor_sections WHERE doctor_id = ? ORDER BY id");
-    $stmt_sections->bind_param("i", $id);
+    $stmt_sections->bind_param("s", $id);
     $stmt_sections->execute();
     $result_sections = $stmt_sections->get_result();
     
