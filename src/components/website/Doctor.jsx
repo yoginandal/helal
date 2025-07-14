@@ -55,12 +55,16 @@ export default function Doctors() {
         const departmentsData = await departmentsRes.json();
 
         // Debug logging
+        console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
         console.log("API Responses:", {
           doctors: doctorsData,
           cities: citiesData,
           hospitals: hospitalsData,
           departments: departmentsData,
         });
+        console.log("First city item:", citiesData[0]);
+        console.log("First hospital item:", hospitalsData[0]);
+        console.log("First department item:", departmentsData[0]);
 
         if (isMounted) {
           if (Array.isArray(doctorsData)) {
@@ -204,8 +208,19 @@ export default function Doctors() {
                     All {filter.placeholder.split(" ")[2]}s
                   </SelectItem>
                   {filter.items.map((item) => (
-                    <SelectItem key={item.id} value={item.name}>
-                      {item.name}
+                    <SelectItem
+                      key={item.id}
+                      value={
+                        item.name ||
+                        item.cityName ||
+                        item.hospitalName ||
+                        item.departmentName
+                      }
+                    >
+                      {item.name ||
+                        item.cityName ||
+                        item.hospitalName ||
+                        item.departmentName}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -7,9 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   MapPin,
-  Phone,
-  Mail,
-  Globe,
   Clock,
   Award,
   //  Stethoscope,
@@ -24,11 +21,40 @@ export function DoctorDetails() {
     const fetchDoctor = async () => {
       setLoading(true);
       try {
+        console.log("Fetching doctor with ID:", id);
+        console.log(
+          "API URL:",
+          `${import.meta.env.VITE_API_URL}/api/get_doctor_details.php?id=${id}`
+        );
+
         const response = await fetch(
           `${import.meta.env.VITE_API_URL}/api/get_doctor_details.php?id=${id}`
         );
-        const data = await response.json();
-        setDoctor(data);
+
+        console.log("Response status:", response.status);
+
+        // Get the response text first to see what we're actually receiving
+        const responseText = await response.text();
+        console.log("Raw response text:", responseText);
+
+        // Try to parse as JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log("Doctor data received:", data);
+        } catch (parseError) {
+          console.error("Failed to parse JSON:", parseError);
+          console.error("Response was:", responseText);
+          throw new Error("Invalid JSON response");
+        }
+
+        // Check if the response contains an error
+        if (data.error) {
+          console.error("API Error:", data.error);
+          setDoctor(null);
+        } else {
+          setDoctor(data);
+        }
       } catch (error) {
         console.error("Error fetching doctor details:", error);
       } finally {
@@ -57,8 +83,14 @@ export function DoctorDetails() {
   if (!doctor) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
-        <div className="text-xl font-semibold text-gray-600">
-          Doctor not found
+        <div className="text-center">
+          <div className="text-xl font-semibold text-gray-600 mb-2">
+            Doctor not found
+          </div>
+          <div className="text-sm text-gray-500">Doctor ID: {id}</div>
+          <div className="text-sm text-gray-400 mt-2">
+            Check the console for more details
+          </div>
         </div>
       </div>
     );
@@ -125,32 +157,27 @@ export function DoctorDetails() {
                   <h3 className="text-xl font-semibold">Expertise</h3>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{doctor.expertise}</p>
+                  <ul className="list-disc pl-5 text-muted-foreground">
+                    {(doctor.expertise || "")
+                      .split(/,|\//)
+                      .map(
+                        (item, idx) =>
+                          item.trim() && <li key={idx}>{item.trim()}</li>
+                      )}
+                  </ul>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
-                  <h3 className="text-xl font-semibold">Contact Information</h3>
+                  <h3 className="text-xl font-semibold">Location</h3>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent>
                   <div className="flex items-center gap-2">
                     <MapPin className="text-muted-foreground" />
                     <span>
-                      {capitalizeWords(doctor.city)},{" "}
-                      {capitalizeWords(doctor.state)}
+                      {doctor.city ? capitalizeWords(doctor.city) : "-"}
+                      {doctor.state ? `, ${capitalizeWords(doctor.state)}` : ""}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="text-muted-foreground" />
-                    <span>{doctor.phone || "Not Available"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="text-muted-foreground" />
-                    <span>{doctor.email || "Not Available"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Globe className="text-muted-foreground" />
-                    <span>{doctor.website || "Not Available"}</span>
                   </div>
                 </CardContent>
               </Card>
