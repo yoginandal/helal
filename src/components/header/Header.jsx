@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 
 export default function Header({ className }) {
   return (
-    <header className={`font-sans ${className}`}>
+    <header className={`font-sans sticky top-0 z-50 ${className}`}>
       <BannerNav />
       <Navbar />
     </header>
