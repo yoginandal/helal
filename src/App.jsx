@@ -6,6 +6,7 @@ import AdminPanel from "@/components/admin/AdminPanel";
 import LoginComponent from "@/components/ui/LoginComponent";
 import Doctors from "@/components/website/Doctor";
 import DoctorDetails from "@/components/website/DoctorDetails";
+import Homepage from "@/components/website/Homepage";
 
 // Layout Wrapper for Conditional Header and Footer
 function Layout({ children }) {
@@ -33,6 +34,7 @@ export default function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
+          <Route path="/" element={<Homepage />} />
           <Route path="/admin/*" element={<AdminPanel />} />
           <Route path="/login" element={<LoginComponent />} />
 

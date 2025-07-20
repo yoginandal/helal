@@ -51,19 +51,19 @@ if (!$doctor) {
     exit;
 }
 
-// Fetch doctor sections
-$stmt_sections = $conn->prepare("SELECT sectionHeading, sectionContent FROM doctor_sections WHERE doctor_id = ? ORDER BY id");
+    // Fetch doctor sections
+    $stmt_sections = $conn->prepare("SELECT sectionHeading, sectionContent FROM doctor_sections WHERE doctor_id = ? ORDER BY id");
 $stmt_sections->bind_param("s", $id);
-$stmt_sections->execute();
-$result_sections = $stmt_sections->get_result();
-
-$sections = [];
-while ($row = $result_sections->fetch_assoc()) {
-    $sections[] = $row;
-}
-
-$doctor['sections'] = $sections;
-$stmt_sections->close();
+    $stmt_sections->execute();
+    $result_sections = $stmt_sections->get_result();
+    
+    $sections = [];
+    while ($row = $result_sections->fetch_assoc()) {
+        $sections[] = $row;
+    }
+    
+    $doctor['sections'] = $sections;
+    $stmt_sections->close();
 $conn->close();
 
 echo json_encode($doctor);
