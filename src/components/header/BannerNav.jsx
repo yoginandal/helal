@@ -4,7 +4,7 @@ import ContactDetails from "@/components/ContactDetails";
 
 export default function BannerNav() {
   return (
-    <div className="bg-blue-900 text-white py-2 px-4">
+    <div className="bg-blue-900 text-white py-2 px-4 hidden md:block">
       <div className="container mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center text-sm">
           {/* Contact Information */}

@@ -68,7 +68,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="hero-section h-screen md:h-[calc(100vh-160px)] lg:h-[calc(100vh-120px)] w-full relative">
+    <section className="hero-section h-[calc(100vh-80px)] md:h-[calc(100vh-160px)] lg:h-[calc(100vh-120px)] w-full relative">
       <img
         src={bgImg}
         alt="a student holding a laptop"
@@ -76,11 +76,11 @@ const Hero = () => {
       />
 
       {/* Black overlay with 70% opacity */}
-      <div className="absolute inset-0 bg-black opacity-20"></div>
+      <div className="absolute inset-0 bg-black opacity-40 md:opacity-20"></div>
 
       {/* Hero Content */}
       <div className="absolute inset-0 flex items-center pb-40 md:pb-0">
-        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 max-w-2xl lg:max-w-3xl xl:max-w-4xl">
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 max-w-2xl lg:max-w-3xl xl:max-w-4xl text-left">
           {/* Main Heading */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
             Find Your Perfect
@@ -95,7 +95,7 @@ const Hero = () => {
           </p>
 
           {/* Call to Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6">
+          <div className="flex flex-row gap-3 sm:gap-4 lg:gap-6 justify-start">
             <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 sm:py-3 px-6 sm:px-8 lg:px-10 rounded-lg text-base sm:text-lg lg:text-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
               Find Doctors
             </button>
@@ -105,24 +105,28 @@ const Hero = () => {
           </div>
 
           {/* Additional Info */}
-          <div className="mt-6 sm:mt-8 lg:mt-12 flex flex-col sm:flex-row gap-4 sm:gap-6 lg:gap-8 text-white">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-400 rounded-full"></div>
-              <span className="text-xs sm:text-sm lg:text-base">
-                24/7 Emergency Care
-              </span>
+          <div className="mt-6 sm:mt-8 lg:mt-12 flex flex-col gap-4 sm:gap-6 lg:gap-8 text-white justify-start">
+            <div className="flex flex-row gap-4 justify-start">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-400 rounded-full"></div>
+                <span className="text-xs sm:text-sm lg:text-base">
+                  24/7 Emergency Care
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-blue-400 rounded-full"></div>
+                <span className="text-xs sm:text-sm lg:text-base">
+                  Expert Doctors
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-blue-400 rounded-full"></div>
-              <span className="text-xs sm:text-sm lg:text-base">
-                Expert Doctors
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-purple-400 rounded-full"></div>
-              <span className="text-xs sm:text-sm lg:text-base">
-                Modern Facilities
-              </span>
+            <div className="flex justify-start">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-purple-400 rounded-full"></div>
+                <span className="text-xs sm:text-sm lg:text-base">
+                  Modern Facilities
+                </span>
+              </div>
             </div>
           </div>
         </div>
