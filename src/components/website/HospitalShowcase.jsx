@@ -2,13 +2,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Clock, Award, Users, Heart } from "lucide-react";
+import JaypeeHospital from "@/assets/hospitals/jaypee-hospital.webp";
+import MetroHeartHospital from "@/assets/hospitals/metro-heart-institute-with-multispecialty-hospital.webp";
 
 const hospitals = [
   {
     id: 1,
     name: "Metro Heart Institute",
     subtitle: "with Multispecialty Hospital",
-    image: "/modern-heart-hospital.png",
+    image: MetroHeartHospital,
     specialties: ["Cardiology", "Cardiac Surgery", "Emergency Care"],
     location: "Downtown Medical District",
     phone: "+1 (555) 123-4567",
@@ -21,7 +23,7 @@ const hospitals = [
     id: 2,
     name: "Jaypee Hospital",
     subtitle: "Comprehensive Healthcare",
-    image: "/placeholder-wks9e.png",
+    image: JaypeeHospital,
     specialties: ["General Medicine", "Surgery", "Pediatrics"],
     location: "Central Healthcare Hub",
     phone: "+1 (555) 234-5678",
