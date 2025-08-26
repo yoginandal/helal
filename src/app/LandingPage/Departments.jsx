@@ -4,6 +4,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 import {
   Brain,
   HeartPulse,
@@ -15,75 +16,114 @@ import {
   Hospital,
   ArrowRight,
   Sparkles,
+  Search,
 } from "lucide-react";
 
 const PRIMARY = "#307BC4";
 const BADGE = "#86BBF1";
 
-const ALL_DEPARTMENTS = [
-  {
-    title: "neuro surgery & neuro spine",
-    icon: Brain,
-    tags: ["neuro", "surgery"],
-    blurb: "Advanced neurosurgical care with minimally invasive options.",
-  },
-  {
-    title: "cardiology",
-    icon: HeartPulse,
-    tags: ["cardio"],
-    blurb: "Comprehensive heart care, diagnostics, and interventions.",
-  },
-  {
-    title: "urology & kidney transplant",
-    icon: Syringe,
-    tags: ["urology", "transplant"],
-    blurb: "Specialized urologic treatments and transplant programs.",
-  },
-  {
-    title: "nephrology & kidney transplantation",
-    icon: Droplet,
-    tags: ["nephrology", "transplant"],
-    blurb: "Renal care from dialysis to complex transplants.",
-  },
-  {
-    title: "gastroenterology",
-    icon: Stethoscope,
-    tags: ["gastro"],
-    blurb: "Digestive health with endoscopy and day‑care procedures.",
-  },
-  {
-    title: "liver transplant & hpb surgery",
-    icon: Microscope,
-    tags: ["liver", "transplant", "surgery"],
-    blurb: "Expert HPB surgery and multidisciplinary transplant care.",
-  },
-  {
-    title: "vascular interventions and surgery",
-    icon: Activity,
-    tags: ["vascular", "surgery"],
-    blurb: "Endovascular and surgical treatments for vascular disease.",
-  },
-  {
-    title: "medical oncology",
-    icon: Hospital,
-    tags: ["oncology"],
-    blurb: "Evidence‑based cancer care and supportive therapies.",
-  },
-];
+// Icon mapping based on department type
+const getIconForDepartment = (iconType, departmentName) => {
+  const safe = (departmentName || "").toLowerCase();
 
-const TAGS = [
-  { key: "all", label: "All" },
-  { key: "surgery", label: "Surgery" },
-  { key: "transplant", label: "Transplant" },
-  { key: "cardio", label: "Cardio" },
-  { key: "neuro", label: "Neuro" },
-  { key: "gastro", label: "Gastro" },
-  { key: "vascular", label: "Vascular" },
-  { key: "oncology", label: "Oncology" },
-];
+  if (iconType === "default" || !iconType) {
+    // Auto-detect icon based on department name
+    if (safe.includes("neuro") || safe.includes("brain")) return Brain;
+    if (safe.includes("cardio") || safe.includes("heart")) return HeartPulse;
+    if (safe.includes("urology") || safe.includes("kidney")) return Syringe;
+    if (safe.includes("nephrology")) return Droplet;
+    if (safe.includes("gastro") || safe.includes("digestive"))
+      return Stethoscope;
+    if (safe.includes("liver") || safe.includes("hpb")) return Microscope;
+    if (safe.includes("vascular")) return Activity;
+    if (safe.includes("oncology") || safe.includes("cancer")) return Hospital;
+    if (safe.includes("surgery") || safe.includes("surgical"))
+      return Stethoscope;
+    if (safe.includes("transplant")) return Microscope;
+  }
+
+  // Default icon mapping
+  const iconMap = {
+    brain: Brain,
+    heart: HeartPulse,
+    droplet: Droplet,
+    syringe: Syringe,
+    stethoscope: Stethoscope,
+    activity: Activity,
+    microscope: Microscope,
+    hospital: Hospital,
+  };
+
+  return iconMap[iconType] || Stethoscope;
+};
+
+// Generate tags for a single department based on its name
+const generateTagsForDepartment = (departmentName) => {
+  const name = (departmentName || "").toLowerCase();
+  const tags = [];
+
+  if (name.includes("surgery") || name.includes("surgical"))
+    tags.push("surgery");
+  if (name.includes("transplant")) tags.push("transplant");
+  if (name.includes("cardio") || name.includes("heart")) tags.push("cardio");
+  if (name.includes("neuro") || name.includes("brain")) tags.push("neuro");
+  if (name.includes("gastro") || name.includes("digestive"))
+    tags.push("gastro");
+  if (name.includes("vascular")) tags.push("vascular");
+  if (name.includes("oncology") || name.includes("cancer"))
+    tags.push("oncology");
+  if (name.includes("urology")) tags.push("urology");
+  if (name.includes("nephrology") || name.includes("kidney"))
+    tags.push("nephrology");
+
+  if (tags.length === 0) tags.push("general");
+  return tags;
+};
+
+// Generate description for a department based on its name
+const generateDescriptionForDepartment = (departmentName) => {
+  const name = (departmentName || "").toLowerCase();
+
+  if (name.includes("surgery") || name.includes("surgical")) {
+    return "Advanced surgical procedures with modern techniques and equipment.";
+  } else if (name.includes("transplant")) {
+    return "Specialized transplant programs with comprehensive pre and post-operative care.";
+  } else if (name.includes("cardio") || name.includes("heart")) {
+    return "Comprehensive heart care, diagnostics, and interventions.";
+  } else if (name.includes("neuro") || name.includes("brain")) {
+    return "Advanced neurological care with minimally invasive options.";
+  } else if (name.includes("gastro") || name.includes("digestive")) {
+    return "Digestive health with endoscopy and day-care procedures.";
+  } else if (name.includes("vascular")) {
+    return "Endovascular and surgical treatments for vascular disease.";
+  } else if (name.includes("oncology") || name.includes("cancer")) {
+    return "Evidence-based cancer care and supportive therapies.";
+  } else if (name.includes("urology")) {
+    return "Specialized urologic treatments and comprehensive care.";
+  } else if (name.includes("nephrology") || name.includes("kidney")) {
+    return "Renal care from dialysis to complex treatments.";
+  } else {
+    return "Specialized medical care with experienced healthcare professionals.";
+  }
+};
+
+// Generate tags for filtering
+const generateTags = (departments) => {
+  const allTags = new Set();
+  departments.forEach((dept) => {
+    (dept.tags || []).forEach((tag) => allTags.add(tag));
+  });
+
+  const tagArray = Array.from(allTags).map((tag) => ({
+    key: tag,
+    label: tag.charAt(0).toUpperCase() + tag.slice(1),
+  }));
+
+  return [{ key: "all", label: "All" }, ...tagArray];
+};
 
 function slugify(text) {
-  return text
+  return (text || "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
@@ -109,7 +149,6 @@ function toDisplayTitle(text) {
   const capitalize = (word) => {
     const lower = word.toLowerCase();
     if (lower === "hpb") return "HPB";
-    // Handle hyphenated words
     if (word.includes("-")) {
       return word
         .split("-")
@@ -126,7 +165,7 @@ function toDisplayTitle(text) {
   return text
     .split(/\s+/)
     .map((word, index) => {
-      if (word === "&") return word; // keep ampersand as is
+      if (word === "&") return word;
       const cleaned = word.replace(/[^A-Za-z&-]/g, "");
       const isSmall = smallWords.has(cleaned.toLowerCase());
       if (index === 0 || index === text.length - 1) return capitalize(word);
@@ -222,21 +261,102 @@ DeptCard.propTypes = {
 export default function SpecializedDepartments({
   title = "Specialized Departments",
   subtitle = "Find the right specialty quickly with search and smart filters.",
-  departments = ALL_DEPARTMENTS,
+  maxDisplay = 8,
 }) {
+  const navigate = useNavigate();
+  const [departments, setDepartments] = React.useState([]);
+  const [filteredDepartments, setFilteredDepartments] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
   const [query, setQuery] = React.useState("");
   const [activeTag, setActiveTag] = React.useState("all");
+  const [tags, setTags] = React.useState([]);
 
-  const filtered = React.useMemo(() => {
-    return departments.filter((d) => {
+  React.useEffect(() => {
+    const fetchDepartments = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/get_departments.php`,
+          {
+            headers: { Accept: "application/json" },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const raw = await response.json();
+        // Support [] or {data: []}
+        const list = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+          ? raw.data
+          : [];
+
+        if (!Array.isArray(list)) {
+          console.error("Departments payload is not an array:", raw);
+          setDepartments([]);
+          setFilteredDepartments([]);
+          setTags([{ key: "all", label: "All" }]);
+          return;
+        }
+
+        const enhanced = list.map((dept) => {
+          const name = dept.name || dept.departmentName || "";
+          return {
+            ...dept,
+            name,
+            tags: generateTagsForDepartment(name),
+            description: generateDescriptionForDepartment(name),
+            icon_type: dept.icon_type || "default",
+          };
+        });
+
+        setDepartments(enhanced);
+        setFilteredDepartments(enhanced.slice(0, maxDisplay));
+        setTags(generateTags(enhanced));
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        setDepartments([]);
+        setFilteredDepartments([]);
+        setTags([{ key: "all", label: "All" }]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, [maxDisplay]);
+
+  React.useEffect(() => {
+    const filtered = departments.filter((d) => {
       const matchesTag =
-        activeTag === "all" ? true : d.tags.includes(activeTag);
+        activeTag === "all" ? true : (d.tags || []).includes(activeTag);
       const matchesQuery = query
-        ? d.title.toLowerCase().includes(query.toLowerCase())
+        ? (d.name || "").toLowerCase().includes(query.toLowerCase())
         : true;
       return matchesTag && matchesQuery;
     });
-  }, [departments, activeTag, query]);
+
+    setFilteredDepartments(filtered.slice(0, maxDisplay));
+  }, [departments, activeTag, query, maxDisplay]);
+
+  if (loading) {
+    return (
+      <section aria-labelledby="departments-heading" className="relative">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE] via-white to-white" />
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:py-16 lg:py-20">
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-pulse text-2xl font-semibold text-slate-600">
+              Loading departments...
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="departments-heading" className="relative">
@@ -276,20 +396,23 @@ export default function SpecializedDepartments({
             <label htmlFor="dept-search" className="sr-only">
               Search departments
             </label>
-            <Input
-              id="dept-search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search departments..."
-              className="h-11 border-[#86BBF1] placeholder:text-slate-400 focus-visible:ring-[#307BC4]"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                id="dept-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search departments..."
+                className="h-11 pl-10 border-[#86BBF1] placeholder:text-slate-400 focus-visible:ring-[#307BC4]"
+              />
+            </div>
           </form>
 
           <nav
             aria-label="Department filters"
             className="flex flex-wrap justify-center gap-2"
           >
-            {TAGS.map((t) => {
+            {tags.slice(0, 8).map((t) => {
               const active = activeTag === t.key;
               return (
                 <button
@@ -319,20 +442,20 @@ export default function SpecializedDepartments({
           className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           role="list"
         >
-          {filtered.map((d, i) => {
-            const id = slugify(d.title);
-            const ItemIcon = d.icon;
+          {filteredDepartments.map((d, i) => {
+            const id = slugify(d.name);
+            const ItemIcon = getIconForDepartment(d.icon_type, d.name);
             return (
               <li
-                key={id}
+                key={id || `dept-${i}`}
                 style={{ transitionDelay: `${i * 40}ms` }}
                 className="h-full animate-in fade-in slide-in-from-bottom-1"
               >
                 <DeptCard
-                  id={id}
-                  title={d.title}
+                  id={id || `dept-${i}`}
+                  title={d.name}
                   Icon={ItemIcon}
-                  blurb={d.blurb}
+                  blurb={d.description}
                 />
               </li>
             );
@@ -343,9 +466,9 @@ export default function SpecializedDepartments({
         <div className="mt-10 flex items-center justify-center">
           <Button
             className="bg-[#307BC4] hover:bg-[#2766A2] focus-visible:ring-[#307BC4]"
-            onClick={() => alert("Showing more departments...")}
+            onClick={() => navigate("/departments")}
           >
-            View more departments
+            View all departments
           </Button>
         </div>
       </div>
@@ -356,13 +479,5 @@ export default function SpecializedDepartments({
 SpecializedDepartments.propTypes = {
   title: PropTypes.string,
   subtitle: PropTypes.string,
-  departments: PropTypes.arrayOf(
-    PropTypes.shape({
-      title: PropTypes.string.isRequired,
-      icon: PropTypes.oneOfType([PropTypes.func, PropTypes.elementType])
-        .isRequired,
-      tags: PropTypes.arrayOf(PropTypes.string).isRequired,
-      blurb: PropTypes.string.isRequired,
-    })
-  ),
+  maxDisplay: PropTypes.number,
 };

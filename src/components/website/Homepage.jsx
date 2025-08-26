@@ -7,7 +7,7 @@ const Homepage = () => {
     <div className="min-h-screen">
       <Hero />
       <WhyChooseUs />
-      <SpecializedDepartments />
+      <SpecializedDepartments maxDisplay={6} />
       {/* Add other homepage sections here if needed */}
     </div>
   );
