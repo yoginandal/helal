@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Clock, Award, Users, Heart } from "lucide-react";
 import JaypeeHospital from "@/assets/hospitals/jaypee-hospital.webp";
 import MetroHeartHospital from "@/assets/hospitals/metro-heart-institute-with-multispecialty-hospital.webp";
+import BLKMaxSuperSpecialtyHospital from "@/assets/hospitals/blk-max-super-specialty-hospital-delhi.webp";
+import AakashHealthcare from "@/assets/hospitals/aakash-healthcare-super-specialty-hospital.webp";
+import FortisEscortsHospital from "@/assets/hospitals/fortis-escorts-hospital-delhi.webp";
 
 const hospitals = [
   {
@@ -36,7 +39,7 @@ const hospitals = [
     id: 3,
     name: "BLK-Max Super Specialty Hospital",
     subtitle: "Delhi",
-    image: "/premium-hospital-dusk.png",
+    image: BLKMaxSuperSpecialtyHospital,
     specialties: ["Oncology", "Neurology", "Orthopedics"],
     location: "Delhi Medical Center",
     phone: "+1 (555) 345-6789",
@@ -49,7 +52,7 @@ const hospitals = [
     id: 4,
     name: "Aakash Healthcare",
     subtitle: "Super Specialty Hospital",
-    image: "/modern-healthcare-entrance.png",
+    image: AakashHealthcare,
     specialties: ["Gastroenterology", "Urology", "Pulmonology"],
     location: "Healthcare District",
     phone: "+1 (555) 456-7890",
@@ -62,7 +65,7 @@ const hospitals = [
     id: 5,
     name: "Fortis Escorts Hospital",
     subtitle: "Delhi",
-    image: "/modern-hospital.png",
+    image: FortisEscortsHospital,
     specialties: ["Transplant Surgery", "Critical Care", "Rehabilitation"],
     location: "South Delhi Medical Hub",
     phone: "+1 (555) 567-8901",
