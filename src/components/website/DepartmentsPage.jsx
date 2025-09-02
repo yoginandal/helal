@@ -14,6 +14,7 @@ import {
   Sparkles,
   Search,
 } from "lucide-react";
+import BannerWithBreadcrumbs from "./BannerWithBreadcrumbs";
 
 const PRIMARY = "#307BC4";
 const BADGE = "#86BBF1";
@@ -254,6 +255,13 @@ export default function DepartmentsPage() {
   const [activeTag, setActiveTag] = useState("all");
   const [tags, setTags] = useState([]);
 
+  const aboutLinks = [
+    { href: "/about", label: "About Us" },
+    { href: "/mission", label: "Our Mission" },
+    { href: "/team", label: "Our Team" },
+    { href: "/contact", label: "Contact Us" },
+  ];
+
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -314,137 +322,143 @@ export default function DepartmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <section aria-labelledby="departments-heading" className="relative">
-        {/* blue backdrop */}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE] via-white to-white" />
+    <>
+      <BannerWithBreadcrumbs title="Departments" aboutLinks={aboutLinks} />
+      <div className="min-h-screen bg-slate-50">
+        <section aria-labelledby="departments-heading" className="relative">
+          {/* blue backdrop */}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE] via-white to-white" />
 
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:py-16 lg:py-20">
-          {/* Header */}
-          <div className="mx-auto max-w-3xl text-center">
-            <div
-              className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-sm bg-white"
-              style={{ borderColor: BADGE, color: "#0B3B75" }}
-            >
-              <Sparkles
-                className="size-3.5"
-                style={{ color: PRIMARY }}
-                aria-hidden="true"
-              />
-              Our Expertise
-            </div>
-            <h1
-              id="departments-heading"
-              className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-            >
-              All Departments & Specializations
-            </h1>
-            <p className="mt-3 text-base text-slate-600 sm:text-lg">
-              Explore our comprehensive range of medical departments and
-              specializations.
-            </p>
-          </div>
-
-          {/* Controls */}
-          <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <form
-              role="search"
-              aria-label="Search departments"
-              className="w-full sm:max-w-sm"
-            >
-              <label htmlFor="dept-search" className="sr-only">
-                Search departments
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  id="dept-search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search departments..."
-                  className="h-11 pl-10 border-[#86BBF1] placeholder:text-slate-400 focus-visible:ring-[#307BC4]"
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:py-16 lg:py-20">
+            {/* Header */}
+            <div className="mx-auto max-w-3xl text-center">
+              <div
+                className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-sm bg-white"
+                style={{ borderColor: BADGE, color: "#0B3B75" }}
+              >
+                <Sparkles
+                  className="size-3.5"
+                  style={{ color: PRIMARY }}
+                  aria-hidden="true"
                 />
+                Our Expertise
               </div>
-            </form>
+              <h1
+                id="departments-heading"
+                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+              >
+                All Departments & Specializations
+              </h1>
+              <p className="mt-3 text-base text-slate-600 sm:text-lg">
+                Explore our comprehensive range of medical departments and
+                specializations.
+              </p>
+            </div>
 
-            <nav
-              aria-label="Department filters"
-              className="flex flex-wrap justify-center gap-2"
+            {/* Controls */}
+            <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+              <form
+                role="search"
+                aria-label="Search departments"
+                className="w-full sm:max-w-sm"
+              >
+                <label htmlFor="dept-search" className="sr-only">
+                  Search departments
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="dept-search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search departments..."
+                    className="h-11 pl-10 border-[#86BBF1] placeholder:text-slate-400 focus-visible:ring-[#307BC4]"
+                  />
+                </div>
+              </form>
+
+              <nav
+                aria-label="Department filters"
+                className="flex flex-wrap justify-center gap-2"
+              >
+                {tags.map((t) => {
+                  const active = activeTag === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setActiveTag(t.key)}
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        active
+                          ? "text-[#0B3B75]"
+                          : "text-slate-700 hover:text-slate-900"
+                      }`}
+                      style={{
+                        backgroundColor: active ? BADGE : "#F5F9FF",
+                        border: `1px solid ${active ? BADGE : "#E2EEFC"}`,
+                      }}
+                      aria-pressed={active}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Results count */}
+            <div className="mt-6 text-center text-sm text-slate-600">
+              Showing {filteredDepartments.length} of {departments.length}{" "}
+              departments
+            </div>
+
+            {/* Grid as a semantic list */}
+            <ul
+              className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              role="list"
             >
-              {tags.map((t) => {
-                const active = activeTag === t.key;
+              {filteredDepartments.map((dept, i) => {
+                const id = slugify(dept.name);
+                const ItemIcon = getIconForDepartment(
+                  dept.icon_type,
+                  dept.name
+                );
                 return (
-                  <button
-                    key={t.key}
-                    type="button"
-                    onClick={() => setActiveTag(t.key)}
-                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                      active
-                        ? "text-[#0B3B75]"
-                        : "text-slate-700 hover:text-slate-900"
-                    }`}
-                    style={{
-                      backgroundColor: active ? BADGE : "#F5F9FF",
-                      border: `1px solid ${active ? BADGE : "#E2EEFC"}`,
-                    }}
-                    aria-pressed={active}
+                  <li
+                    key={id}
+                    style={{ transitionDelay: `${i * 40}ms` }}
+                    className="h-full animate-in fade-in slide-in-from-bottom-1"
                   >
-                    {t.label}
-                  </button>
+                    <DeptCard
+                      id={id}
+                      title={dept.name}
+                      Icon={ItemIcon}
+                      blurb={dept.description}
+                    />
+                  </li>
                 );
               })}
-            </nav>
-          </div>
+            </ul>
 
-          {/* Results count */}
-          <div className="mt-6 text-center text-sm text-slate-600">
-            Showing {filteredDepartments.length} of {departments.length}{" "}
-            departments
-          </div>
-
-          {/* Grid as a semantic list */}
-          <ul
-            className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            role="list"
-          >
-            {filteredDepartments.map((dept, i) => {
-              const id = slugify(dept.name);
-              const ItemIcon = getIconForDepartment(dept.icon_type, dept.name);
-              return (
-                <li
-                  key={id}
-                  style={{ transitionDelay: `${i * 40}ms` }}
-                  className="h-full animate-in fade-in slide-in-from-bottom-1"
+            {filteredDepartments.length === 0 && (
+              <div className="mt-12 text-center py-12 bg-white rounded-lg shadow">
+                <p className="text-xl text-slate-600">
+                  No departments found matching your criteria.
+                </p>
+                <Button
+                  className="mt-4 bg-[#307BC4] hover:bg-[#2766A2]"
+                  onClick={() => {
+                    setQuery("");
+                    setActiveTag("all");
+                  }}
                 >
-                  <DeptCard
-                    id={id}
-                    title={dept.name}
-                    Icon={ItemIcon}
-                    blurb={dept.description}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-
-          {filteredDepartments.length === 0 && (
-            <div className="mt-12 text-center py-12 bg-white rounded-lg shadow">
-              <p className="text-xl text-slate-600">
-                No departments found matching your criteria.
-              </p>
-              <Button
-                className="mt-4 bg-[#307BC4] hover:bg-[#2766A2]"
-                onClick={() => {
-                  setQuery("");
-                  setActiveTag("all");
-                }}
-              >
-                Clear filters
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
+                  Clear filters
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
