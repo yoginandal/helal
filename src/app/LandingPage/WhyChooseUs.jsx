@@ -191,7 +191,7 @@ export default function WhyChooseUs({
     <section
       aria-labelledby="why-choose-us-title"
       aria-describedby="why-choose-us-subtitle"
-      className="relative"
+      className="relative overflow-hidden"
     >
       {/* Background layer (blue theme) */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE]/60 via-white to-white" />
