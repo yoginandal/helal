@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,14 +15,13 @@ import {
   Sparkles,
   Search,
 } from "lucide-react";
-import BannerWithBreadcrumbs from "./BannerWithBreadcrumbs";
 
 const PRIMARY = "#307BC4";
 const BADGE = "#86BBF1";
 
 // Icon mapping based on department type
 const getIconForDepartment = (iconType, departmentName) => {
-  const name = departmentName.toLowerCase();
+  const name = (departmentName || "").toLowerCase();
 
   if (iconType === "default" || !iconType) {
     // Auto-detect icon based on department name
@@ -56,7 +56,7 @@ const getIconForDepartment = (iconType, departmentName) => {
 
 // Generate tags for a single department based on its name
 const generateTagsForDepartment = (departmentName) => {
-  const name = departmentName.toLowerCase();
+  const name = (departmentName || "").toLowerCase();
   const tags = [];
 
   if (name.includes("surgery") || name.includes("surgical"))
@@ -110,7 +110,7 @@ const generateDescriptionForDepartment = (departmentName) => {
 const generateTags = (departments) => {
   const allTags = new Set();
   departments.forEach((dept) => {
-    dept.tags.forEach((tag) => allTags.add(tag));
+    (dept.tags || []).forEach((tag) => allTags.add(tag));
   });
 
   const tagArray = Array.from(allTags).map((tag) => ({
@@ -197,6 +197,10 @@ function IconBadge({ children }) {
   );
 }
 
+IconBadge.propTypes = {
+  children: PropTypes.node,
+};
+
 function DeptCard({ id, title, Icon, blurb }) {
   const headingId = `${id}-title`;
   const descId = `${id}-desc`;
@@ -247,6 +251,13 @@ function DeptCard({ id, title, Icon, blurb }) {
   );
 }
 
+DeptCard.propTypes = {
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  Icon: PropTypes.oneOfType([PropTypes.func, PropTypes.elementType]).isRequired,
+  blurb: PropTypes.string.isRequired,
+};
+
 export default function DepartmentsPage() {
   const [departments, setDepartments] = useState([]);
   const [filteredDepartments, setFilteredDepartments] = useState([]);
@@ -255,38 +266,78 @@ export default function DepartmentsPage() {
   const [activeTag, setActiveTag] = useState("all");
   const [tags, setTags] = useState([]);
 
-  const aboutLinks = [
-    { href: "/about", label: "About Us" },
-    { href: "/mission", label: "Our Mission" },
-    { href: "/team", label: "Our Team" },
-    { href: "/contact", label: "Contact Us" },
-  ];
-
   useEffect(() => {
     const fetchDepartments = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/get_departments.php`
-        );
-        const data = await response.json();
+      const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const primaryUrl = base
+        ? `${base}/api/get_departments.php`
+        : "/api/get_departments.php";
+      const fallbackUrl = "/api/get_departments.php";
 
-        if (Array.isArray(data)) {
-          // Enhance the data with generated tags and descriptions
-          const enhancedData = data.map((dept) => ({
-            ...dept,
-            tags: generateTagsForDepartment(dept.name),
-            description: generateDescriptionForDepartment(dept.name),
-            icon_type: "default",
-          }));
+      const extractList = (raw) => {
+        if (Array.isArray(raw)) return raw;
+        const candidates = [
+          raw?.data,
+          raw?.departments,
+          raw?.rows,
+          raw?.result,
+          raw?.records,
+        ];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        return [];
+      };
 
-          setDepartments(enhancedData);
-          setFilteredDepartments(enhancedData);
-          setTags(generateTags(enhancedData));
-        } else {
-          console.error("Fetched departments data is not an array:", data);
-          setDepartments([]);
-          setFilteredDepartments([]);
+      const tryFetch = async (url) => {
+        const res = await fetch(url, {
+          headers: { Accept: "application/json, text/plain;q=0.9,*/*;q=0.8" },
+          credentials: "omit",
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        try {
+          return await res.json();
+        } catch {
+          const text = await res.text();
+          try {
+            return JSON.parse(text);
+          } catch {
+            console.warn("Departments response not JSON:", text?.slice(0, 120));
+            return [];
+          }
         }
+      };
+
+      try {
+        let raw;
+        try {
+          raw = await tryFetch(primaryUrl);
+        } catch (e1) {
+          console.warn(
+            "Primary departments endpoint failed, trying fallback",
+            e1?.message
+          );
+          raw = await tryFetch(fallbackUrl);
+        }
+
+        const list = extractList(raw);
+        const enhancedData = list.map((dept) => {
+          const name =
+            dept.name ||
+            dept.departmentName ||
+            dept.department_name ||
+            dept.DepartmentName ||
+            "";
+          return {
+            ...dept,
+            name,
+            tags: generateTagsForDepartment(name),
+            description: generateDescriptionForDepartment(name),
+            icon_type: dept.icon_type || "default",
+          };
+        });
+
+        setDepartments(enhancedData);
+        setFilteredDepartments(enhancedData); // show ALL on the full page
+        setTags(generateTags(enhancedData));
       } catch (error) {
         console.error("Error fetching departments:", error);
         setDepartments([]);
@@ -322,143 +373,137 @@ export default function DepartmentsPage() {
   }
 
   return (
-    <>
-      <BannerWithBreadcrumbs title="Departments" aboutLinks={aboutLinks} />
-      <div className="min-h-screen bg-slate-50">
-        <section aria-labelledby="departments-heading" className="relative">
-          {/* blue backdrop */}
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE] via-white to-white" />
+    <div className="min-h-screen bg-slate-50">
+      <section aria-labelledby="departments-heading" className="relative">
+        {/* blue backdrop */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE] via-white to-white" />
 
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:py-16 lg:py-20">
-            {/* Header */}
-            <div className="mx-auto max-w-3xl text-center">
-              <div
-                className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-sm bg-white"
-                style={{ borderColor: BADGE, color: "#0B3B75" }}
-              >
-                <Sparkles
-                  className="size-3.5"
-                  style={{ color: PRIMARY }}
-                  aria-hidden="true"
-                />
-                Our Expertise
-              </div>
-              <h1
-                id="departments-heading"
-                className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-              >
-                All Departments & Specializations
-              </h1>
-              <p className="mt-3 text-base text-slate-600 sm:text-lg">
-                Explore our comprehensive range of medical departments and
-                specializations.
-              </p>
-            </div>
-
-            {/* Controls */}
-            <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-              <form
-                role="search"
-                aria-label="Search departments"
-                className="w-full sm:max-w-sm"
-              >
-                <label htmlFor="dept-search" className="sr-only">
-                  Search departments
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="dept-search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search departments..."
-                    className="h-11 pl-10 border-[#86BBF1] placeholder:text-slate-400 focus-visible:ring-[#307BC4]"
-                  />
-                </div>
-              </form>
-
-              <nav
-                aria-label="Department filters"
-                className="flex flex-wrap justify-center gap-2"
-              >
-                {tags.map((t) => {
-                  const active = activeTag === t.key;
-                  return (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setActiveTag(t.key)}
-                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                        active
-                          ? "text-[#0B3B75]"
-                          : "text-slate-700 hover:text-slate-900"
-                      }`}
-                      style={{
-                        backgroundColor: active ? BADGE : "#F5F9FF",
-                        border: `1px solid ${active ? BADGE : "#E2EEFC"}`,
-                      }}
-                      aria-pressed={active}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Results count */}
-            <div className="mt-6 text-center text-sm text-slate-600">
-              Showing {filteredDepartments.length} of {departments.length}{" "}
-              departments
-            </div>
-
-            {/* Grid as a semantic list */}
-            <ul
-              className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              role="list"
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:py-16 lg:py-20">
+          {/* Header */}
+          <div className="mx-auto max-w-3xl text-center">
+            <div
+              className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-sm bg-white"
+              style={{ borderColor: BADGE, color: "#0B3B75" }}
             >
-              {filteredDepartments.map((dept, i) => {
-                const id = slugify(dept.name);
-                const ItemIcon = getIconForDepartment(
-                  dept.icon_type,
-                  dept.name
-                );
+              <Sparkles
+                className="size-3.5"
+                style={{ color: PRIMARY }}
+                aria-hidden="true"
+              />
+              Our Expertise
+            </div>
+            <h1
+              id="departments-heading"
+              className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+            >
+              All Departments & Specializations
+            </h1>
+            <p className="mt-3 text-base text-slate-600 sm:text-lg">
+              Explore our comprehensive range of medical departments and
+              specializations.
+            </p>
+          </div>
+
+          {/* Controls */}
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <form
+              role="search"
+              aria-label="Search departments"
+              className="w-full sm:max-w-sm"
+            >
+              <label htmlFor="dept-search" className="sr-only">
+                Search departments
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  id="dept-search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search departments..."
+                  className="h-11 pl-10 border-[#86BBF1] placeholder:text-slate-400 focus-visible:ring-[#307BC4]"
+                />
+              </div>
+            </form>
+
+            <nav
+              aria-label="Department filters"
+              className="flex flex-wrap justify-center gap-2"
+            >
+              {tags.map((t) => {
+                const active = activeTag === t.key;
                 return (
-                  <li
-                    key={id}
-                    style={{ transitionDelay: `${i * 40}ms` }}
-                    className="h-full animate-in fade-in slide-in-from-bottom-1"
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setActiveTag(t.key)}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                      active
+                        ? "text-[#0B3B75]"
+                        : "text-slate-700 hover:text-slate-900"
+                    }`}
+                    style={{
+                      backgroundColor: active ? BADGE : "#F5F9FF",
+                      border: `1px solid ${active ? BADGE : "#E2EEFC"}`,
+                    }}
+                    aria-pressed={active}
                   >
-                    <DeptCard
-                      id={id}
-                      title={dept.name}
-                      Icon={ItemIcon}
-                      blurb={dept.description}
-                    />
-                  </li>
+                    {t.label}
+                  </button>
                 );
               })}
-            </ul>
-
-            {filteredDepartments.length === 0 && (
-              <div className="mt-12 text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-xl text-slate-600">
-                  No departments found matching your criteria.
-                </p>
-                <Button
-                  className="mt-4 bg-[#307BC4] hover:bg-[#2766A2]"
-                  onClick={() => {
-                    setQuery("");
-                    setActiveTag("all");
-                  }}
-                >
-                  Clear filters
-                </Button>
-              </div>
-            )}
+            </nav>
           </div>
-        </section>
-      </div>
-    </>
+
+          {/* Results count */}
+          <div className="mt-6 text-center text-sm text-slate-600">
+            Showing {filteredDepartments.length} of {departments.length}{" "}
+            departments
+          </div>
+
+          {/* Grid as a semantic list */}
+          <ul
+            className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            role="list"
+          >
+            {filteredDepartments.map((dept, i) => {
+              const id = slugify(dept.name);
+              const ItemIcon = getIconForDepartment(dept.icon_type, dept.name);
+              return (
+                <li
+                  key={id}
+                  style={{ transitionDelay: `${i * 40}ms` }}
+                  className="h-full animate-in fade-in slide-in-from-bottom-1"
+                >
+                  <DeptCard
+                    id={id}
+                    title={dept.name}
+                    Icon={ItemIcon}
+                    blurb={dept.description}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+
+          {filteredDepartments.length === 0 && (
+            <div className="mt-12 text-center py-12 bg-white rounded-lg shadow">
+              <p className="text-xl text-slate-600">
+                No departments found matching your criteria.
+              </p>
+              <Button
+                className="mt-4 bg-[#307BC4] hover:bg-[#2766A2]"
+                onClick={() => {
+                  setQuery("");
+                  setActiveTag("all");
+                }}
+              >
+                Clear filters
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }

@@ -274,37 +274,83 @@ export default function SpecializedDepartments({
   React.useEffect(() => {
     const fetchDepartments = async () => {
       setLoading(true);
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/get_departments.php`,
-          {
-            headers: { Accept: "application/json" },
-            credentials: "include",
-          }
-        );
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+      // Build endpoint with a safe fallback to relative path
+      const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const primaryUrl = base
+        ? `${base}/api/get_departments.php`
+        : "/api/get_departments.php";
+      const fallbackUrl = "/api/get_departments.php";
+
+      // Helper to normalize various API shapes to an array
+      const extractList = (raw) => {
+        if (Array.isArray(raw)) return raw;
+        const candidates = [
+          raw?.data,
+          raw?.departments,
+          raw?.rows,
+          raw?.result,
+          raw?.records,
+        ];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        if (raw && typeof raw === "object") {
+          const values = Object.values(raw).filter(
+            (v) => v && typeof v === "object"
+          );
+          if (values.length) return values;
+        }
+        return [];
+      };
+
+      const tryFetch = async (url) => {
+        const res = await fetch(url, {
+          headers: { Accept: "application/json, text/plain;q=0.9,*/*;q=0.8" },
+          // Avoid cross-origin credential issues when server sets wildcard CORS
+          credentials: "omit",
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        // Try JSON first, then text -> JSON
+        try {
+          return await res.json();
+        } catch (_) {
+          const text = await res.text();
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.warn(
+              "Departments response is not valid JSON. First 120 chars:",
+              text?.slice(0, 120)
+            );
+            return [];
+          }
+        }
+      };
+
+      try {
+        let raw;
+        try {
+          raw = await tryFetch(primaryUrl);
+        } catch (e1) {
+          console.warn(
+            "Primary departments endpoint failed, trying fallback",
+            e1?.message
+          );
+          raw = await tryFetch(fallbackUrl);
         }
 
-        const raw = await response.json();
-        // Support [] or {data: []}
-        const list = Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.data)
-          ? raw.data
-          : [];
+        const list = extractList(raw);
 
-        if (!Array.isArray(list)) {
-          console.error("Departments payload is not an array:", raw);
-          setDepartments([]);
-          setFilteredDepartments([]);
-          setTags([{ key: "all", label: "All" }]);
-          return;
+        if (!Array.isArray(list) || list.length === 0) {
+          console.warn("Departments payload empty or unrecognized shape:", raw);
         }
 
         const enhanced = list.map((dept) => {
-          const name = dept.name || dept.departmentName || "";
+          const name =
+            dept.name ||
+            dept.departmentName ||
+            dept.department_name ||
+            dept.DepartmentName ||
+            "";
           return {
             ...dept,
             name,
@@ -437,30 +483,42 @@ export default function SpecializedDepartments({
           </nav>
         </div>
 
-        {/* Grid as a semantic list */}
-        <ul
-          className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          role="list"
-        >
-          {filteredDepartments.map((d, i) => {
-            const id = slugify(d.name);
-            const ItemIcon = getIconForDepartment(d.icon_type, d.name);
-            return (
-              <li
-                key={id || `dept-${i}`}
-                style={{ transitionDelay: `${i * 40}ms` }}
-                className="h-full animate-in fade-in slide-in-from-bottom-1"
-              >
-                <DeptCard
-                  id={id || `dept-${i}`}
-                  title={d.name}
-                  Icon={ItemIcon}
-                  blurb={d.description}
-                />
-              </li>
-            );
-          })}
-        </ul>
+        {/* Grid as a semantic list or an empty state */}
+        {filteredDepartments.length === 0 ? (
+          <div className="mt-10 flex items-center justify-center">
+            <div
+              className="rounded-lg border px-4 py-6 text-center text-slate-600"
+              style={{ borderColor: BADGE }}
+            >
+              No departments available. Please check your API URL or try again
+              later.
+            </div>
+          </div>
+        ) : (
+          <ul
+            className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4"
+            role="list"
+          >
+            {filteredDepartments.map((d, i) => {
+              const id = slugify(d.name);
+              const ItemIcon = getIconForDepartment(d.icon_type, d.name);
+              return (
+                <li
+                  key={id || `dept-${i}`}
+                  style={{ transitionDelay: `${i * 40}ms` }}
+                  className="h-full animate-in fade-in slide-in-from-bottom-1"
+                >
+                  <DeptCard
+                    id={id || `dept-${i}`}
+                    title={d.name}
+                    Icon={ItemIcon}
+                    blurb={d.description}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         {/* CTA */}
         <div className="mt-10 flex items-center justify-center">

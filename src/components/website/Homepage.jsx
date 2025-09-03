@@ -8,7 +8,7 @@ const Homepage = () => {
     <div className="min-h-screen">
       <Hero />
       <WhyChooseUs />
-      <SpecializedDepartments maxDisplay={6} />
+      <SpecializedDepartments maxDisplay={8} />
       <HowItWorks />
     </div>
   );
