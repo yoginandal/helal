@@ -12,9 +12,10 @@ import {
   Microscope,
   Hospital,
   ArrowRight,
-  Sparkles,
   Search,
 } from "lucide-react";
+import SimpleBanner from "./SimpleBanner";
+import DepartmentsBanner from "@/assets/Departments_banner.webp";
 
 const PRIMARY = "#307BC4";
 const BADGE = "#86BBF1";
@@ -374,36 +375,15 @@ export default function DepartmentsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SimpleBanner
+        title="Departments & Specializations"
+        backgroundImage={DepartmentsBanner}
+      />
       <section aria-labelledby="departments-heading" className="relative">
         {/* blue backdrop */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#EAF3FE] via-white to-white" />
 
         <div className="mx-auto max-w-7xl px-4 py-14 sm:py-16 lg:py-20">
-          {/* Header */}
-          <div className="mx-auto max-w-3xl text-center">
-            <div
-              className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium shadow-sm bg-white"
-              style={{ borderColor: BADGE, color: "#0B3B75" }}
-            >
-              <Sparkles
-                className="size-3.5"
-                style={{ color: PRIMARY }}
-                aria-hidden="true"
-              />
-              Our Expertise
-            </div>
-            <h1
-              id="departments-heading"
-              className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-            >
-              All Departments & Specializations
-            </h1>
-            <p className="mt-3 text-base text-slate-600 sm:text-lg">
-              Explore our comprehensive range of medical departments and
-              specializations.
-            </p>
-          </div>
-
           {/* Controls */}
           <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
             <form

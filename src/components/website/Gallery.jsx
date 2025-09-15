@@ -1,5 +1,10 @@
 "use client";
 import { LayoutGrid } from "@/components/ui/layout-grid";
+import WordPullUp from "@/components/ui/word-pull-up";
+import imageOne from "@/assets/px/26.webp";
+import imageTwo from "@/assets/px/3.webp";
+import imageThree from "@/assets/px/44.webp";
+import imageFour from "@/assets/px/28.webp";
 
 export function LayoutGridDemo() {
   return (
@@ -15,12 +20,12 @@ export default function Gallery() {
     <div className="py-20 w-full relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Our Medical Facilities
-          </h2>
+          <WordPullUp
+            words="Gallery"
+            className="text-4xl md:text-5xl font-bold tracking-tight text-mainBlue text-center"
+          />
           <p className="mt-3 text-base text-slate-600 sm:text-lg max-w-2xl mx-auto">
-            Explore our state-of-the-art medical facilities and modern
-            infrastructure
+            Explore our gallery
           </p>
         </div>
         <div className="relative">
@@ -94,28 +99,24 @@ const cards = [
     id: 1,
     content: <SkeletonOne />,
     className: "md:col-span-2",
-    thumbnail:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    thumbnail: imageOne,
   },
   {
     id: 2,
     content: <SkeletonTwo />,
     className: "col-span-1",
-    thumbnail:
-      "https://images.unsplash.com/photo-1551601651-2a8555f1a136?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    thumbnail: imageTwo,
   },
   {
     id: 3,
     content: <SkeletonThree />,
     className: "col-span-1",
-    thumbnail:
-      "https://images.unsplash.com/photo-1576091160550-2173dba0ef28?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    thumbnail: imageThree,
   },
   {
     id: 4,
     content: <SkeletonFour />,
     className: "md:col-span-2",
-    thumbnail:
-      "https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    thumbnail: imageFour,
   },
 ];

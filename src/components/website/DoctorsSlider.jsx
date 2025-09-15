@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import { useSlidesPerView } from "@/app/hooks/useSlidesPerView"; // Make sure this path is correct
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import WordPullUp from "@/components/ui/word-pull-up";
 import {
   MapPin,
   Stethoscope,
@@ -21,7 +23,7 @@ export default function DoctorsSlider() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const sliderRef = useRef(null);
+  const slidesPerView = useSlidesPerView(); // Get dynamic slides per view
 
   const capitalizeWords = (text) => {
     return text
@@ -34,9 +36,9 @@ export default function DoctorsSlider() {
       : "";
   };
 
-  // Generate random patient count for demo purposes
   const generatePatientCount = () => Math.floor(Math.random() * 500) + 100;
 
+  // Data fetching logic
   useEffect(() => {
     let isMounted = true;
     const fetchDoctors = async () => {
@@ -49,8 +51,7 @@ export default function DoctorsSlider() {
 
         if (isMounted) {
           if (Array.isArray(doctorsData)) {
-            // Take only first 8 doctors for the slider
-            setDoctors(doctorsData.slice(0, 8));
+            setDoctors(doctorsData.slice(0, 8)); // Take first 8 doctors
           } else {
             console.error("Fetched doctors data is not an array:", doctorsData);
             setDoctors([]);
@@ -72,32 +73,37 @@ export default function DoctorsSlider() {
     };
   }, []);
 
-  // Auto-slide functionality
+  // Reset index on resize to avoid visual bugs
   useEffect(() => {
-    if (doctors.length <= 3) return;
+    setCurrentIndex(0);
+  }, [slidesPerView]);
+
+  const maxIndex =
+    doctors.length > slidesPerView ? doctors.length - slidesPerView : 0;
+
+  // Auto-slide functionality (now responsive)
+  useEffect(() => {
+    if (doctors.length <= slidesPerView) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => {
-        const maxIndex = doctors.length - 3;
-        return prevIndex >= maxIndex ? 0 : prevIndex + 1;
-      });
+      setCurrentIndex((prevIndex) =>
+        prevIndex >= maxIndex ? 0 : prevIndex + 1
+      );
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [doctors.length]);
+  }, [doctors.length, slidesPerView, maxIndex]);
 
   const nextSlide = () => {
-    const maxIndex = doctors.length - 3;
     setCurrentIndex((prevIndex) => (prevIndex >= maxIndex ? 0 : prevIndex + 1));
   };
 
   const prevSlide = () => {
-    const maxIndex = doctors.length - 3;
     setCurrentIndex((prevIndex) => (prevIndex <= 0 ? maxIndex : prevIndex - 1));
   };
 
+  // Loading Skeleton
   if (loading) {
-    // Optimized loading skeleton to match new card size
     return (
       <div className="py-20 bg-gradient-to-br from-background via-muted/30 to-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -131,10 +137,12 @@ export default function DoctorsSlider() {
     );
   }
 
+  // Render nothing if no doctors are fetched
   if (doctors.length === 0) {
     return null;
   }
 
+  // Main Component Render
   return (
     <div className="py-20 bg-gradient-to-br from-background via-muted/30 to-background relative overflow-hidden">
       {/* Background decorative elements */}
@@ -144,7 +152,7 @@ export default function DoctorsSlider() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {/* Enhanced Header */}
+        {/* Header */}
         <div className="text-center mb-16 space-y-6">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
             <Shield className="w-4 h-4 text-primary" />
@@ -152,11 +160,11 @@ export default function DoctorsSlider() {
               Trusted Healthcare Professionals
             </span>
           </div>
-
           <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold text-balance bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Meet Our Expert Doctors
-            </h2>
+            <WordPullUp
+              words="Meet Our Expert Doctors"
+              className="text-4xl md:text-5xl font-bold tracking-tight text-mainBlue text-center"
+            />
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto text-pretty leading-relaxed">
               Connect with world-class medical professionals dedicated to
               providing exceptional healthcare with compassion and expertise.
@@ -164,16 +172,16 @@ export default function DoctorsSlider() {
           </div>
         </div>
 
-        {/* Enhanced Slider Container */}
+        {/* Slider */}
         <div className="relative">
-          {/* Navigation Buttons */}
-          {doctors.length > 3 && (
+          {/* Navigation Buttons (responsive visibility) */}
+          {doctors.length > slidesPerView && (
             <>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={prevSlide}
-                className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-card/95 backdrop-blur-sm hover:bg-card shadow-lg border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 group"
+                className="absolute -left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-card/95 backdrop-blur-sm hover:bg-card shadow-lg border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 group hidden lg:inline-flex"
               >
                 <ChevronLeft className="w-5 h-5 group-hover:text-primary transition-colors" />
               </Button>
@@ -181,40 +189,34 @@ export default function DoctorsSlider() {
                 variant="outline"
                 size="icon"
                 onClick={nextSlide}
-                className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-card/95 backdrop-blur-sm hover:bg-card shadow-lg border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 group"
+                className="absolute -right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-card/95 backdrop-blur-sm hover:bg-card shadow-lg border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 group hidden lg:inline-flex"
               >
                 <ChevronRight className="w-5 h-5 group-hover:text-primary transition-colors" />
               </Button>
             </>
           )}
 
-          {/* Enhanced Slider */}
-          <div
-            ref={sliderRef}
-            className="overflow-hidden rounded-2xl"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-            }}
-          >
+          {/* Slider Content */}
+          <div className="overflow-hidden">
             <div
               className="flex transition-transform duration-700 ease-out"
               style={{
-                transform: `translateX(-${currentIndex * (100 / 3)}%)`,
+                width: `${(doctors.length / slidesPerView) * 100}%`,
+                transform: `translateX(-${
+                  (currentIndex / doctors.length) * 100
+                }%)`,
               }}
             >
               {doctors.map((doctor) => {
                 const patientCount = generatePatientCount();
-
                 return (
                   <div
                     key={doctor.id}
-                    className="flex-shrink-0 px-4"
-                    style={{ width: `${100 / 3}%` }}
+                    className="flex-shrink-0 px-2 md:px-3"
+                    style={{ width: `${100 / doctors.length}%` }}
                   >
                     <Card className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-card border-border/50 hover:border-primary/30 backdrop-blur-sm h-full flex flex-col">
                       <CardContent className="p-0 flex flex-col flex-grow">
-                        {/* UPDATED: Added bg-black and changed image to object-contain */}
                         <div className="relative h-60 overflow-hidden bg-black">
                           <img
                             src={
@@ -228,10 +230,6 @@ export default function DoctorsSlider() {
                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-
-                          {/* REMOVED: Rating badge has been deleted */}
-
-                          {/* Doctor name and specialty overlay */}
                           <div className="absolute bottom-4 left-4 right-4">
                             <h3 className="text-xl font-bold text-white mb-1 text-balance">
                               Dr. {capitalizeWords(doctor.name)}
@@ -249,8 +247,6 @@ export default function DoctorsSlider() {
                             </div>
                           </div>
                         </div>
-
-                        {/* Card content area */}
                         <div className="p-4 space-y-3 flex-grow flex flex-col">
                           <div className="space-y-2 flex-grow">
                             <div className="flex items-center text-sm text-muted-foreground">
@@ -276,7 +272,6 @@ export default function DoctorsSlider() {
                               </span>
                             </div>
                           </div>
-
                           <div className="pt-2">
                             <Button
                               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group"
@@ -295,12 +290,10 @@ export default function DoctorsSlider() {
             </div>
           </div>
 
-          {/* Enhanced Dots Indicator */}
-          {doctors.length > 3 && (
+          {/* Dots Indicator (responsive visibility and length) */}
+          {doctors.length > slidesPerView && (
             <div className="flex justify-center mt-10 space-x-2">
-              {Array.from({
-                length: Math.max(1, doctors.length - 2),
-              }).map((_, index) => (
+              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
@@ -309,13 +302,14 @@ export default function DoctorsSlider() {
                       ? "bg-primary w-8 shadow-lg"
                       : "bg-border w-2 hover:bg-muted-foreground/50"
                   }`}
+                  aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* Enhanced View All Section */}
+        {/* View All Section */}
         <div className="text-center mt-16 space-y-4">
           <p className="text-muted-foreground">
             Discover more healthcare professionals in our network

@@ -2,12 +2,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Users } from "lucide-react";
-import BannerWithBreadcrumbs from "./BannerWithBreadcrumbs";
+import SimpleBanner from "./SimpleBanner";
 import JaypeeHospital from "@/assets/hospitals/jaypee-hospital.webp";
 import MetroHeartHospital from "@/assets/hospitals/metro-heart-institute-with-multispecialty-hospital.webp";
 import BLKMaxSuperSpecialtyHospital from "@/assets/hospitals/blk-max-super-specialty-hospital-delhi.webp";
 import AakashHealthcare from "@/assets/hospitals/aakash-healthcare-super-specialty-hospital.webp";
 import FortisEscortsHospital from "@/assets/hospitals/fortis-escorts-hospital-delhi.webp";
+import HospitalBanner from "@/assets/Hospital_banner.webp";
 
 const hospitals = [
   {
@@ -78,16 +79,9 @@ const hospitals = [
 ];
 
 export function HospitalShowcase() {
-  const aboutLinks = [
-    { href: "/about", label: "About Us" },
-    { href: "/mission", label: "Our Mission" },
-    { href: "/team", label: "Our Team" },
-    { href: "/contact", label: "Contact Us" },
-  ];
-
   return (
     <>
-      <BannerWithBreadcrumbs title="Our Hospitals" aboutLinks={aboutLinks} />
+      <SimpleBanner title="Our Hospitals" backgroundImage={HospitalBanner} />
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Hospital Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

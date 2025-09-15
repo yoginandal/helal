@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import WordPullUp from "@/components/ui/word-pull-up";
 import {
   Brain,
   HeartPulse,
@@ -423,12 +424,10 @@ export default function SpecializedDepartments({
             />
             Our Expertise
           </div>
-          <h2
-            id="departments-heading"
-            className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-          >
-            {title}
-          </h2>
+          <WordPullUp
+            words={title}
+            className="text-4xl md:text-5xl font-bold tracking-tight text-mainBlue text-center"
+          />
           <p className="mt-3 text-base text-slate-600 sm:text-lg">{subtitle}</p>
         </div>
 

@@ -9,6 +9,7 @@ import DoctorDetails from "@/components/website/DoctorDetails";
 import Homepage from "@/components/website/Homepage";
 import DepartmentsPage from "@/components/website/DepartmentsPage";
 import { HospitalShowcase } from "@/components/website/HospitalShowcase";
+import ContactPage from "@/components/ContactPage";
 
 // Layout Wrapper for Conditional Header and Footer
 function Layout({ children }) {
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/doctors/:id" element={<DoctorDetails />} />
           <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/hospitals" element={<HospitalShowcase />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

@@ -19,7 +19,8 @@ import {
   List,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import BannerWithBreadcrumbs from "./BannerWithBreadcrumbs";
+import SimpleBanner from "./SimpleBanner";
+import DoctorBanner from "@/assets/hero_bg.webp";
 
 export default function Doctors() {
   const navigate = useNavigate();
@@ -36,13 +37,6 @@ export default function Doctors() {
   const [cities, setCities] = useState([]);
   const [hospitals, setHospitals] = useState([]);
   const [departments, setDepartments] = useState([]);
-
-  const aboutLinks = [
-    { href: "/about", label: "About Us" },
-    { href: "/mission", label: "Our Mission" },
-    { href: "/team", label: "Our Team" },
-    { href: "/contact", label: "Contact Us" },
-  ];
 
   useEffect(() => {
     let isMounted = true;
@@ -165,7 +159,7 @@ export default function Doctors() {
 
   return (
     <>
-      <BannerWithBreadcrumbs title="Find Your Doctor" aboutLinks={aboutLinks} />
+      <SimpleBanner title="Find Your Doctor" backgroundImage={DoctorBanner} />
       <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 space-y-4">

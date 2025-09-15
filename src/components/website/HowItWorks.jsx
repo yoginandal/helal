@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useTransform, motion, useScroll } from "framer-motion";
 import { ReactLenis } from "lenis/react";
 import PropTypes from "prop-types";
+import WordPullUp from "@/components/ui/word-pull-up";
 
 const steps = [
   {
@@ -82,9 +83,10 @@ export default function HowItWorksMotion() {
               </span>
               Our Process
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              How It Works
-            </h2>
+            <WordPullUp
+              words="How It Works"
+              className="text-4xl md:text-5xl font-bold tracking-tight text-mainBlue text-center"
+            />
             <p className="mt-3 text-base text-slate-600 sm:text-lg">
               Follow our simple 8-step process to get world-class medical care
               in India

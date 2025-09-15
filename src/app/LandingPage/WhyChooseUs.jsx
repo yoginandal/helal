@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion, useReducedMotion } from "framer-motion";
+import WordPullUp from "@/components/ui/word-pull-up";
 import {
   Stethoscope,
   HeartPulse,
@@ -238,12 +239,10 @@ export default function WhyChooseUs({
             />
             {eyebrow}
           </div>
-          <h2
-            id="why-choose-us-title"
-            className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl text-balance"
-          >
-            {title}
-          </h2>
+          <WordPullUp
+            words={title}
+            className="text-4xl md:text-5xl font-bold tracking-tight text-mainBlue text-center"
+          />
           <p
             id="why-choose-us-subtitle"
             className="mt-3 text-base text-slate-600 sm:text-lg text-pretty"
