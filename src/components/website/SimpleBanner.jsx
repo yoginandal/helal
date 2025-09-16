@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-const SimpleBanner = ({ title, backgroundImage }) => {
+const SimpleBanner = ({ title, subtitle, backgroundImage }) => {
   // If either title or backgroundImage is missing, render nothing.
   if (!title || !backgroundImage) {
     return null;
@@ -42,7 +42,7 @@ const SimpleBanner = ({ title, backgroundImage }) => {
           {title}
         </h1>
         <p className="mt-4 text-lg md:text-xl text-white/80 max-w-2xl mx-auto [text-shadow:_0_2px_4px_rgb(0_0_0_/_50%)]">
-          A short, engaging subtitle can add context and style.
+          {subtitle}
         </p>
         {/* Subtle accent line */}
         <div
@@ -57,6 +57,7 @@ const SimpleBanner = ({ title, backgroundImage }) => {
 // Prop types remain the same
 SimpleBanner.propTypes = {
   title: PropTypes.string.isRequired,
+  subtitle: PropTypes.string,
   backgroundImage: PropTypes.string.isRequired,
 };
 

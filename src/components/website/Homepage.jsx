@@ -1,5 +1,5 @@
 import Hero from "@/app/LandingPage/Hero";
-import WhyChooseUs from "@/app/LandingPage/WhyChooseUs";
+import WhyChooseUs from "@/components/website/WhyChooseUs/WhyChooseUs";
 import SpecializedDepartments from "@/app/LandingPage/Departments";
 import HowItWorks from "./HowItWorks";
 import DoctorsSlider from "./DoctorsSlider";

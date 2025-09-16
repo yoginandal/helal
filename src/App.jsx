@@ -8,6 +8,7 @@ import Doctors from "@/components/website/Doctor";
 import DoctorDetails from "@/components/website/DoctorDetails";
 import Homepage from "@/components/website/Homepage";
 import DepartmentsPage from "@/components/website/DepartmentsPage";
+import AboutPage from "@/components/website/AboutPage";
 import { HospitalShowcase } from "@/components/website/HospitalShowcase";
 import ContactPage from "@/components/ContactPage";
 
@@ -42,10 +43,11 @@ export default function App() {
           <Route path="/login" element={<LoginComponent />} />
 
           {/* Add other routes here */}
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/hospitals" element={<HospitalShowcase />} />
           <Route path="/doctors" element={<Doctors />} />
           <Route path="/doctors/:id" element={<DoctorDetails />} />
           <Route path="/departments" element={<DepartmentsPage />} />
-          <Route path="/hospitals" element={<HospitalShowcase />} />
           <Route path="/contact" element={<ContactPage />} />
         </Routes>
       </Layout>
