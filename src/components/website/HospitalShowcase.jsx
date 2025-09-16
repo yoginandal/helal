@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import SimpleBanner from "./SimpleBanner";
 import JaypeeHospital from "@/assets/hospitals/jaypee-hospital.webp";
 import MetroHeartHospital from "@/assets/hospitals/metro-heart-institute-with-multispecialty-hospital.webp";
@@ -14,6 +15,7 @@ const hospitals = [
   {
     id: 1,
     name: "Metro Heart Institute",
+    slug: "metro-heart-institute-faridabad",
     subtitle: "with Multispecialty Hospital",
     image: MetroHeartHospital,
     specialties: ["Cardiology", "Cardiac Surgery", "Emergency Care"],
@@ -27,6 +29,7 @@ const hospitals = [
   {
     id: 2,
     name: "Jaypee Hospital",
+    slug: "jaypee-hospital-noida",
     subtitle: "Comprehensive Healthcare",
     image: JaypeeHospital,
     specialties: ["General Medicine", "Surgery", "Pediatrics"],
@@ -40,6 +43,7 @@ const hospitals = [
   {
     id: 3,
     name: "BLK-Max Super Specialty Hospital",
+    slug: "blk-max-super-speciality-hospital-delhi",
     subtitle: "Delhi",
     image: BLKMaxSuperSpecialtyHospital,
     specialties: ["Oncology", "Neurology", "Orthopedics"],
@@ -53,6 +57,7 @@ const hospitals = [
   {
     id: 4,
     name: "Aakash Healthcare",
+    slug: "aakash-healthcare-super-speciality-hospital-dwarka",
     subtitle: "Super Specialty Hospital",
     image: AakashHealthcare,
     specialties: ["Gastroenterology", "Urology", "Pulmonology"],
@@ -66,6 +71,7 @@ const hospitals = [
   {
     id: 5,
     name: "Fortis Escorts Hospital",
+    slug: "fortis-escorts-heart-institute-delhi",
     subtitle: "Delhi",
     image: FortisEscortsHospital,
     specialties: ["Transplant Surgery", "Critical Care", "Rehabilitation"],
@@ -85,81 +91,101 @@ export function HospitalShowcase() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Hospital Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {hospitals.map((hospital) => (
-            <Card
-              key={hospital.id}
-              className="group overflow-hidden border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card"
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={hospital.image || "/placeholder.svg"}
-                  alt={hospital.name}
-                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-primary text-primary-foreground">
-                    ⭐ {hospital.rating}
-                  </Badge>
+          {hospitals.map((hospital) => {
+            const slug =
+              hospital.slug ||
+              hospital.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)/g, "");
+            return (
+              <Card
+                key={hospital.id}
+                className="group overflow-hidden border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card"
+              >
+                <div className="relative overflow-hidden">
+                  <Link to={`/hospitals/${slug}`}>
+                    <img
+                      src={hospital.image || "/placeholder.svg"}
+                      alt={hospital.name}
+                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </Link>
+                  <div className="absolute top-4 right-4">
+                    <Badge className="bg-primary text-primary-foreground">
+                      ⭐ {hospital.rating}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
 
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-card-foreground mb-1 font-sans">
-                    {hospital.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    {hospital.subtitle}
+                <CardContent className="p-6">
+                  <div className="mb-4">
+                    <Link
+                      to={`/hospitals/${slug}`}
+                      className="hover:text-primary"
+                    >
+                      <h3 className="text-xl font-bold text-card-foreground mb-1 font-sans">
+                        {hospital.name}
+                      </h3>
+                    </Link>
+                    <p className="text-muted-foreground text-sm">
+                      {hospital.subtitle}
+                    </p>
+                  </div>
+
+                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                    {hospital.description}
                   </p>
-                </div>
 
-                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                  {hospital.description}
-                </p>
+                  {/* Specialties */}
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {hospital.specialties.map((specialty) => (
+                        <Badge
+                          key={specialty}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {specialty}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Specialties */}
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {hospital.specialties.map((specialty) => (
-                      <Badge
-                        key={specialty}
+                  {/* Hospital Info */}
+                  <div className="space-y-2 mb-6 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span>{hospital.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-primary" />
+                      <span>{hospital.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span>{hospital.patients} patients served annually</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                      Book Appointment
+                    </Button>
+                    <Link to={`/hospitals/${slug}`} className="flex-1">
+                      <Button
                         variant="outline"
-                        className="text-xs"
+                        className="w-full bg-transparent"
                       >
-                        {specialty}
-                      </Badge>
-                    ))}
+                        Learn More
+                      </Button>
+                    </Link>
                   </div>
-                </div>
-
-                {/* Hospital Info */}
-                <div className="space-y-2 mb-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span>{hospital.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-primary" />
-                    <span>{hospital.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span>{hospital.patients} patients served annually</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Book Appointment
-                  </Button>
-                  <Button variant="outline" className="flex-1 bg-transparent">
-                    Learn More
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Call to Action */}

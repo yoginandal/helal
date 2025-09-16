@@ -4,5 +4,6 @@ export const navlinks = [
   { name: "FIND DOCTOR", path: "/doctors" },
   { name: "DEPARTMENTS", path: "/departments" },
   { name: "HOSPITALS", path: "/hospitals" },
+  { name: "GALLERY", path: "/gallery" },
   { name: "CONTACT", path: "/contact" },
 ];
